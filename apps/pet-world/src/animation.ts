@@ -50,7 +50,8 @@ export function createPetAnimator(options: AnimatorOptions = {}): PetAnimator {
   let active: { reaction: Reaction; start: number } | undefined;
 
   function current(time: number) {
-    if (active && (time < active.start || time - active.start >= REACTION_DURATION_MS)) active = undefined;
+    // Frame timestamps can precede the clock reading taken when an action starts, so early samples keep the reaction.
+    if (active && time - active.start >= REACTION_DURATION_MS) active = undefined;
     return active;
   }
 
@@ -72,7 +73,7 @@ export function createPetAnimator(options: AnimatorOptions = {}): PetAnimator {
         eyeOpen: blinking ? 0.1 : 1,
       };
       if (!running) return idle;
-      const progress = (time - running.start) / REACTION_DURATION_MS;
+      const progress = Math.max(0, time - running.start) / REACTION_DURATION_MS;
       if (running.reaction === 'eating') {
         const chew = Math.abs(Math.sin(progress * Math.PI * 4));
         return { ...idle, reaction, mouthOpen: chew, nod: 0.18 * chew, eyeOpen: 0.55 };

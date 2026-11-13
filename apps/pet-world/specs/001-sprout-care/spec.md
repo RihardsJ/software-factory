@@ -1,131 +1,60 @@
-# Feature Specification: [FEATURE NAME]
+# Feature Specification: Sprout Care
 
-**Feature Branch**: `[###-feature-name]`
+**Feature directory**: `apps/pet-world/specs/001-sprout-care`
+**Created**: 2026-11-13
+**Source**: GitHub issue #1, "First issue"
+**Workspace integration**: [root specification](../../../../specs/004-pet-world-application/spec.md)
 
-**Created**: [DATE]
+## User Outcome
 
-**Status**: Draft
+As a visitor, I want to care for a responsive 3D creature so that it feels alive and reacts to my actions.
+A visitor watches Sprout in a small 3D habitat, feeds it, and plays with it.
 
-**Input**: User description: "$ARGUMENTS"
+## User Scenarios
 
-## User Scenarios & Testing *(mandatory)*
+1. **Watch Sprout (P1).** On load, Sprout stands in a lit habitat with a ground plane.
+   Sprout breathes, blinks, and moves its ears while idle.
+2. **Feed Sprout (P1).** Activating Feed raises Fullness by 20, announces the result, and starts a one-second eating reaction.
+3. **Play with Sprout (P1).** Activating Play raises Happiness by 15, lowers Fullness by 10, announces the result, and starts a one-second hop.
+4. **Reduced motion (P2).** With a reduced-motion preference, Sprout stays still. Actions, indicators, reaction status, and announcements still work.
+5. **Graphics failure (P2).** Without WebGL, or after context loss, the visitor sees why the habitat is missing, can retry, and can still feed and play.
 
-<!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
+## Functional Requirements
 
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
--->
+- **FR-001** Render Sprout in a responsive 3D habitat with lighting and a ground plane.
+- **FR-002** Build Sprout procedurally with a round mint-green body, cream belly, two leaf ears, two eyes, and two small feet.
+- **FR-003** While idle, animate gentle breathing, periodic blinking, and ear movement.
+- **FR-004** Show labelled Fullness and Happiness indicators. Both start at 60 out of 100.
+- **FR-005** Feed increases Fullness by 20 and triggers a one-second eating reaction.
+- **FR-006** Play increases Happiness by 15, reduces Fullness by 10, and triggers a one-second hop.
+- **FR-007** Clamp both values between 0 and 100 after every action.
+- **FR-008** A new action replaces the current reaction. Reactions never overlap or queue.
+- **FR-009** Both actions are native buttons, operable with Tab, Enter, and Space. One polite live region announces each result.
+- **FR-010** A reduced-motion preference disables idle and reaction movement. Actions, indicator updates, reaction status text, and announcements remain.
+- **FR-011** When graphics cannot initialise or the context is lost, show an alert explaining that the habitat could not load, with a Try again action.
+- **FR-012** Cleanup stops animation, cancels reaction timers, disconnects observers, removes listeners, and releases geometries, materials, and the renderer. Repeated cleanup is safe.
+- **FR-013** Keep pet state, character construction, animation, scene lifecycle, and controls in separate modules.
 
-### User Story 1 - [Brief Title] (Priority: P1)
+## Success Criteria
 
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-### User Story 2 - [Brief Title] (Priority: P2)
-
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-### User Story 3 - [Brief Title] (Priority: P3)
-
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-[Add more user stories as needed, each with an assigned priority]
-
-### Edge Cases
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
-
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
-
-## Requirements *(mandatory)*
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
-
-### Functional Requirements
-
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-*Example of marking unclear requirements:*
-
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
-
-### Key Entities *(include if feature involves data)*
-
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
-
-## Success Criteria *(mandatory)*
-
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
-### Measurable Outcomes
-
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001** Unit tests cover state transitions, both boundaries, animation transitions, reaction replacement, reduced motion, and cleanup.
+- **SC-002** Chromium tests with software WebGL cover rendering, keyboard actions and announcements, mobile and desktop layout, reduced motion, graphics failure, and context recovery.
+- **SC-003** `npm run check` passes across the complete workspace.
+- **SC-004** Desktop and mobile screenshots accompany the verification report.
 
 ## Assumptions
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
+- State lives in memory only. Refreshing the page starts a new session at 60 and 60.
+- Values do not decay over time. Only Feed and Play change them.
+- Announcements describe each changed value, and say "stays at" when a value is already at its boundary.
+- Reaction status text ("Sprout is eating", "Sprout is hopping", "Sprout is relaxing") is visible feedback, not a second live region.
+- Under reduced motion the reaction still lasts one second in the status text, but Sprout does not move. Reduced motion is read once on mount.
+- Graphics failure leaves care actions usable, because pet state does not depend on rendering.
+- Page departure releases the application. A restored page from the back-forward cache mounts a fresh session.
+- No external models, textures, fonts, or services are loaded.
 
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+## Exclusions
+
+Accounts, backend services, persistence, multiplayer, inventories, currencies, AI conversations, and deployment.
+Shared libraries remain deferred until reuse justifies them.
+Software WebGL verification does not establish compatibility with every physical GPU or browser.

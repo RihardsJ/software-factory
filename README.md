@@ -3,6 +3,7 @@
 A learning project for building reliable, scalable web applications with Three.js graphics.
 The foundation uses a TypeScript Nx monorepo with npm workspaces and executable quality checks.
 The first local application, `apps/reference`, demonstrates a Three.js scene and its resource lifecycle.
+`apps/pet-world` is a small virtual-pet game where visitors care for Sprout, a procedurally built 3D creature.
 
 ## Prerequisites
 
@@ -35,10 +36,11 @@ npm run check
 | `npm run typecheck` | Check every configured project and the root configuration. |
 | `npm test` | Run all Nx test targets once. |
 | `npm run test:watch` | Watch the factory tests during development. |
-| `npm run build` | Build the factory tooling and reference application. |
+| `npm run build` | Build the factory tooling and both browser applications. |
 | `npm run dev` | Start the reference application at `http://127.0.0.1:4200`. |
+| `npm run dev:pet-world` | Start the Pet World application at `http://127.0.0.1:4201`. |
 | `npm run browsers:install` | Install the Chromium browser used for smoke tests. |
-| `npm run e2e` | Build the reference application and run browser checks against its production preview. |
+| `npm run e2e` | Build each browser application and run its browser checks against its production preview. |
 | `npm run check` | Run all lint, type-check, test, build, and browser targets through Nx. |
 | `npm run nx -- show projects` | List discovered workspace projects. |
 | `npm run nx -- graph` | Explore the project dependency graph. |
@@ -66,6 +68,25 @@ Playwright verifies the production build with real software WebGL, including ren
 The browser target is not cached. It runs against a fresh preview server on port 4300.
 These tests do not establish compatibility with every physical GPU or browser.
 
+## Run the Pet World application
+
+After setup, start Sprout's habitat with:
+
+```sh
+npm run dev:pet-world
+```
+
+Then open `http://127.0.0.1:4201`. The command runs `nx run pet-world:dev`.
+Use Feed and Play, or Tab to a button and press Enter or Space, to care for Sprout.
+Fullness and Happiness start at 60 out of 100 and stay between 0 and 100. State lives in memory, so refreshing starts a new session.
+With a reduced-motion preference, Sprout stays still while actions and announcements continue.
+If WebGL is unavailable or loses its context, the page explains the problem, offers a retry, and keeps the care actions working.
+
+`apps/pet-world/src/pet-state.ts` owns the care rules. `animation.ts` samples idle and reaction poses from time.
+`character.ts` builds Sprout, `scene.ts` owns the renderer and habitat, and `app.ts` owns the controls and fallback.
+The production preview for browser checks runs on port 4301.
+Behaviour and verification evidence live in [`apps/pet-world/specs/001-sprout-care/`](apps/pet-world/specs/001-sprout-care/spec.md).
+
 ## Architecture decisions
 
 Use TypeScript for maintained implementation code, including factory commands, generators, and applications.
@@ -78,7 +99,7 @@ Nx coordinates development tasks. It does not establish application scalability 
 
 The npm workspace patterns are `apps/*`, `libs/*`, and `tools/*`.
 The existing project is `@software-factory/factory` in `tools/factory/`.
-The browser project is `reference` in `apps/reference/`.
+The browser projects are `reference` in `apps/reference/` and `pet-world` in `apps/pet-world/`.
 The root Nx project, `software-factory`, checks shared configuration files.
 The root project disables automatic script discovery to prevent recursive task execution.
 Project scripts remain ordinary npm commands, coordinated by Nx.
@@ -203,10 +224,11 @@ Each member has an independent Spec Kit project within the shared Git repository
 | Workspace configuration and coordinated changes | `.specify/` | `specs/` |
 | Factory tooling behaviour | `tools/factory/.specify/` | `tools/factory/specs/` |
 | Reference application behaviour | `apps/reference/.specify/` | `apps/reference/specs/` |
+| Pet World behaviour | `apps/pet-world/.specify/` | `apps/pet-world/specs/` |
 | Future Nx application or library | `<member>/.specify/` | `<member>/specs/` |
 
 The root features remain in place, including the original Nx foundation specification.
-The factory and reference application each have their own Claude skills and local constitution.
+The factory, reference application, and Pet World application each have their own Claude skills and local constitution.
 Each member constitution explicitly references the shared workspace principles. Spec Kit does not provide automatic inheritance.
 Each project numbers features independently.
 Git branches and commits remain shared, so include a project name in feature branch descriptions to avoid collisions.
@@ -315,6 +337,7 @@ Define browser support, error states, and graphics verification within its membe
 .specify/               Templates, scripts, configuration, and constitution
 apps/                   Deployable application workspaces
 apps/reference/         Local Three.js reference application and independent Spec Kit member
+apps/pet-world/         Sprout virtual-pet application and independent Spec Kit member
 libs/                   Future reusable runtime libraries
 tools/factory/          Factory workspace package, smoke test, and Node.js build
 tools/factory/.specify/  Independent factory member configuration and constitution

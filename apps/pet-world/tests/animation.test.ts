@@ -57,6 +57,15 @@ describe('pet animation', () => {
     expect(animator.sample(3900).reaction).toBeNull();
   });
 
+  test('keeps a new reaction when the next frame timestamp precedes its start time', () => {
+    const animator = createPetAnimator();
+    animator.trigger('hopping', 1000.5);
+    const early = animator.sample(996);
+    expect(early.reaction).toBe('hopping');
+    expect(early.lift).toBeCloseTo(0);
+    expect(animator.sample(1500.5).lift).toBeCloseTo(HOP_HEIGHT);
+  });
+
   test('reduced motion keeps a still pose while reporting reactions', () => {
     const animator = createPetAnimator({ reducedMotion: true });
     for (const time of [0, BREATH_PERIOD_MS / 4, BLINK_PERIOD_MS - 50, EAR_PERIOD_MS / 4]) {
