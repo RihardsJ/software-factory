@@ -23,8 +23,8 @@ export function mountPetWorld(root: HTMLElement, options: PetWorldOptions = {}):
         </section>
         <section class="care-panel" aria-labelledby="care-title">
           <h2 id="care-title">Care for Sprout</h2>
-          <div class="stat"><label for="fullness">Fullness</label><meter id="fullness" min="0" max="${STAT_MAX}" low="30" high="70" optimum="100"></meter><output for="fullness" class="stat-value" data-stat="fullness"></output></div>
-          <div class="stat"><label for="happiness">Happiness</label><meter id="happiness" min="0" max="${STAT_MAX}" low="30" high="70" optimum="100"></meter><output for="happiness" class="stat-value" data-stat="happiness"></output></div>
+          <div class="stat"><label for="fullness">Fullness</label><meter id="fullness" min="0" max="${STAT_MAX}" low="30" high="70" optimum="100"></meter><span class="stat-value" data-stat="fullness"></span></div>
+          <div class="stat"><label for="happiness">Happiness</label><meter id="happiness" min="0" max="${STAT_MAX}" low="30" high="70" optimum="100"></meter><span class="stat-value" data-stat="happiness"></span></div>
           <div class="actions"><button class="primary" type="button" data-action="feed">Feed</button><button class="primary" type="button" data-action="play">Play</button></div>
           <p class="announcement" role="status" aria-live="polite"></p>
         </section>
@@ -37,8 +37,8 @@ export function mountPetWorld(root: HTMLElement, options: PetWorldOptions = {}):
   const announcement = root.querySelector<HTMLElement>('.announcement');
   const fullnessMeter = root.querySelector<HTMLMeterElement>('#fullness');
   const happinessMeter = root.querySelector<HTMLMeterElement>('#happiness');
-  const fullnessValue = root.querySelector<HTMLOutputElement>('[data-stat="fullness"]');
-  const happinessValue = root.querySelector<HTMLOutputElement>('[data-stat="happiness"]');
+  const fullnessValue = root.querySelector<HTMLElement>('[data-stat="fullness"]');
+  const happinessValue = root.querySelector<HTMLElement>('[data-stat="happiness"]');
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-action]')];
   if (!host || !fallback || !retry || !reactionBadge || !announcement || !fullnessMeter || !happinessMeter || !fullnessValue || !happinessValue || buttons.length !== 2) {
     throw new Error('Pet World elements are missing');
