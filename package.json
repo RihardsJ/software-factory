@@ -1,0 +1,47 @@
+{
+  "name": "software-factory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A learning project for building reliable Three.js web applications.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.13.0 <25"
+  },
+  "packageManager": "npm@11.6.2",
+  "scripts": {
+    "lint": "nx run-many -t lint --outputStyle=static",
+    "typecheck": "nx run-many -t typecheck --outputStyle=static",
+    "test": "nx run-many -t test --outputStyle=static",
+    "test:watch": "npm run test:watch --workspace=@software-factory/factory",
+    "build": "nx run-many -t build --outputStyle=static",
+    "check": "nx run-many -t lint typecheck test build --outputStyle=static",
+    "nx": "nx",
+    "specify": "uvx --from git+https://github.com/github/spec-kit.git@v1.4.0 specify"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@nx/eslint-plugin": "24.0.6",
+    "@types/node": "24.19.2",
+    "eslint": "10.14.0",
+    "nx": "24.0.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "5.1.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "libs/*",
+    "tools/*"
+  ],
+  "nx": {
+    "includedScripts": [],
+    "targets": {
+      "lint": {
+        "command": "eslint eslint.config.mjs --max-warnings=0"
+      },
+      "typecheck": {
+        "command": "tsc -p tsconfig.json --noEmit"
+      }
+    }
+  }
+}

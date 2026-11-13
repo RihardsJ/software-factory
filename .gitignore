@@ -1,0 +1,23 @@
+node_modules/
+.nx/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Local agent state. Keep shared skills under version control.
+.codex/*
+!.codex/config.toml
+**/.claude/settings.local.json
+CLAUDE.local.md
+
+# Spec Kit can create a local Python environment.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+**/.claude/worktrees/

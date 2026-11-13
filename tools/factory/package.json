@@ -1,0 +1,28 @@
+{
+  "name": "@software-factory/factory",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "nx": {
+    "tags": ["type:tool", "runtime:node"],
+    "includedScripts": ["lint", "typecheck", "test", "build"],
+    "targets": {
+      "test": {
+        "inputs": ["default", "^default", "{workspaceRoot}/.specify/scripts/bash/**/*"]
+      }
+    }
+  }
+}
