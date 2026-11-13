@@ -59,7 +59,8 @@
     {
       "plugin": "@nx/vite/plugin",
       "include": [
-        "apps/reference/**/*"
+        "apps/reference/**/*",
+        "apps/pet-world/**/*"
       ],
       "options": {
         "buildTargetName": "build",
@@ -71,7 +72,8 @@
     {
       "plugin": "@nx/playwright/plugin",
       "include": [
-        "apps/reference/**/*"
+        "apps/reference/**/*",
+        "apps/pet-world/**/*"
       ],
       "options": {
         "targetName": "e2e"

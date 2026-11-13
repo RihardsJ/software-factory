@@ -18,7 +18,8 @@
     "nx": "nx",
     "specify": "uvx --from git+https://github.com/github/spec-kit.git@v1.4.0 specify",
     "dev": "nx run reference:dev",
-    "e2e": "nx run reference:e2e --outputStyle=static",
+    "dev:pet-world": "nx run pet-world:dev",
+    "e2e": "nx run-many -t e2e --outputStyle=static",
     "browsers:install": "playwright install chromium"
   },
   "devDependencies": {
