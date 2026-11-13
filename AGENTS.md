@@ -3,7 +3,7 @@
 ## Purpose and scope
 
 This learning project will build reliable web applications with Three.js graphics.
-The workspace includes factory tooling and a local TypeScript, Vite, and Three.js reference application.
+The workspace includes factory tooling, a local TypeScript, Vite, and Three.js reference application, and the Pet World application.
 Deployment, service architecture, and shared runtime libraries remain deferred.
 
 ## Project map
@@ -20,6 +20,8 @@ Deployment, service architecture, and shared runtime libraries remain deferred.
 - `tools/factory/specs/`: factory member specifications, with independent feature numbering.
 - `apps/reference/`: the first browser application, with its own Spec Kit project and rendering specifications.
 - `apps/reference/tests/`: lifecycle unit tests and Playwright browser checks.
+- `apps/pet-world/`: the Sprout virtual-pet application, with its own Spec Kit project and pet behaviour specifications.
+- `apps/pet-world/tests/`: pet state, animation, scene, and controls unit tests, and Playwright browser checks.
 - `apps/`: deployable application workspaces.
 - `libs/`: future reusable runtime workspaces.
 - `tools/factory/`: factory package, Node.js build, and toolchain smoke test.
@@ -35,6 +37,7 @@ Use Node.js from `.nvmrc` and npm with `package-lock.json`.
 npm ci
 npm run browsers:install
 npm run dev
+npm run dev:pet-world
 npm run check
 npm run check -- --skipNxCache
 npm run lint
@@ -85,6 +88,7 @@ Keep project-specific rules outside the managed Nx block in `CLAUDE.md` so updat
 Use the root Spec Kit project for workspace configuration and coordinated changes spanning projects.
 Use `tools/factory/.specify/` for factory member behaviour and its local `specs/` for feature documents.
 Use `apps/reference/.specify/` for reference rendering behaviour and its local `specs/` for feature documents.
+Use `apps/pet-world/.specify/` for Pet World behaviour and its local `specs/` for feature documents.
 Before starting a workflow, identify the owning Spec Kit project and read its constitution.
 When targeting a member from the repository root, set `SPECIFY_INIT_DIR` to that member's root.
 Use an absolute project path when launching an agent whose working directory might change.

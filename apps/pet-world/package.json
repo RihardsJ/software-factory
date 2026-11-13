@@ -1,0 +1,25 @@
+{
+  "name": "pet-world",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
+    "test": "vitest run --config vite.config.mts"
+  },
+  "dependencies": { "three": "0.187.0" },
+  "nx": {
+    "projectType": "application",
+    "tags": ["type:app", "runtime:browser"],
+    "includedScripts": ["lint", "typecheck", "test"],
+    "targets": {
+      "build": { "outputs": ["{workspaceRoot}/dist/apps/pet-world"] },
+      "e2e": {
+        "cache": false,
+        "dependsOn": ["build"],
+        "outputs": ["{projectRoot}/test-results", "{projectRoot}/playwright-report"]
+      }
+    }
+  }
+}
