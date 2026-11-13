@@ -3,8 +3,8 @@
 ## Purpose and scope
 
 This learning project will build reliable web applications with Three.js graphics.
-The current scope is a TypeScript Nx workspace, repository tooling, and specification workflow.
-Application rendering, framework selection, deployment, and service architecture remain deferred.
+The workspace includes factory tooling and a local TypeScript, Vite, and Three.js reference application.
+Deployment, service architecture, and shared runtime libraries remain deferred.
 
 ## Project map
 
@@ -18,7 +18,9 @@ Application rendering, framework selection, deployment, and service architecture
 - `specs/<number>-<feature>/`: workspace specifications, plans, and tasks.
 - `tools/factory/.specify/`: the factory member's independent Spec Kit project.
 - `tools/factory/specs/`: factory member specifications, with independent feature numbering.
-- `apps/`: future deployable application workspaces.
+- `apps/reference/`: the first browser application, with its own Spec Kit project and rendering specifications.
+- `apps/reference/tests/`: lifecycle unit tests and Playwright browser checks.
+- `apps/`: deployable application workspaces.
 - `libs/`: future reusable runtime workspaces.
 - `tools/factory/`: factory package, Node.js build, and toolchain smoke test.
 - `nx.json`: task coordination, shared inputs, and local caching.
@@ -31,6 +33,8 @@ Use Node.js from `.nvmrc` and npm with `package-lock.json`.
 
 ```sh
 npm ci
+npm run browsers:install
+npm run dev
 npm run check
 npm run check -- --skipNxCache
 npm run lint
@@ -38,6 +42,7 @@ npm run typecheck
 npm test
 npm run test:watch
 npm run build
+npm run e2e
 npm run nx -- show projects
 npm run specify -- version
 ```
@@ -79,6 +84,7 @@ Keep project-specific rules outside the managed Nx block in `CLAUDE.md` so updat
 
 Use the root Spec Kit project for workspace configuration and coordinated changes spanning projects.
 Use `tools/factory/.specify/` for factory member behaviour and its local `specs/` for feature documents.
+Use `apps/reference/.specify/` for reference rendering behaviour and its local `specs/` for feature documents.
 Before starting a workflow, identify the owning Spec Kit project and read its constitution.
 When targeting a member from the repository root, set `SPECIFY_INIT_DIR` to that member's root.
 Use an absolute project path when launching an agent whose working directory might change.
@@ -111,5 +117,7 @@ Build a reference application before extracting libraries or creating custom gen
 Keep upstream Spec Kit assets unchanged unless a project requirement justifies customisation.
 Include meaningful behaviour tests in feature plans, despite optional wording in upstream templates.
 Before delivery, run `npm run check` and review the complete diff.
+The quality command includes browser tests and requires Chromium installation through `npm run browsers:install`.
+For CI on Linux, install Chromium and its system dependencies with `npm exec playwright install --with-deps chromium`.
 Report executed checks and remaining limitations accurately.
 Do not publish, merge, or deploy without explicit authorisation.

@@ -71,9 +71,10 @@ Measure representative application workloads before claiming scalability or perf
 
 The target is web applications with Three.js graphics rendering.
 The foundation uses Node.js 24, npm workspaces, Nx, TypeScript, ESLint, and Vitest.
+The reference application uses Vite, Three.js, and Playwright with software WebGL browser verification.
 Spec Kit provides specification templates, shell scripts, and Claude Code skills.
 Python and uv are external Spec Kit prerequisites. This repository contains no maintained Python implementation.
-Framework, bundler, rendering, persistence, and hosting decisions remain deferred.
+Application UI framework, persistence, and hosting decisions remain deferred.
 
 ## Development Workflow
 
@@ -95,4 +96,4 @@ For amendments, document the reason and update affected guidance.
 Use a major version for incompatible principle changes, a minor version for additions, and a patch version for clarifications.
 During review, check compliance and explain any necessary exception in the feature plan.
 
-**Version**: 2.2.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-13
+**Version**: 2.3.0 | **Ratified**: 2026-11-13 | **Last Amended**: 2026-11-13

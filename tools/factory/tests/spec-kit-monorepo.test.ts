@@ -22,7 +22,7 @@ function run(script: string, args: string[], cwd: string, overrides: NodeJS.Proc
   });
 }
 
-describe.each(['.', 'tools/factory'])('Spec Kit scripts in %s', (project) => {
+describe.each(['.', 'tools/factory', 'apps/reference'])('Spec Kit scripts in %s', (project) => {
   const scripts = join(workspaceRoot, project, '.specify/scripts/bash');
   const common = join(scripts, 'common.sh');
 
@@ -36,16 +36,17 @@ describe.each(['.', 'tools/factory'])('Spec Kit scripts in %s', (project) => {
     expect(result.stdout.trim()).toBe(workspaceRoot);
   });
 
-  test('selects the nearest member from its source directory', () => {
-    const result = resolveRoot(join(memberRoot, 'src'));
+  test.each(['tools/factory', 'apps/reference'])('selects the nearest member from %s source', (member) => {
+    const selected = join(workspaceRoot, member);
+    const result = resolveRoot(join(selected, 'src'));
     expect(result.status, result.stderr).toBe(0);
-    expect(result.stdout.trim()).toBe(memberRoot);
+    expect(result.stdout.trim()).toBe(selected);
   });
 
-  test('selects a member explicitly from the repository root', () => {
-    const result = resolveRoot(workspaceRoot, { SPECIFY_INIT_DIR: 'tools/factory' });
+  test.each(['tools/factory', 'apps/reference'])('selects %s explicitly from the repository root', (member) => {
+    const result = resolveRoot(workspaceRoot, { SPECIFY_INIT_DIR: member });
     expect(result.status, result.stderr).toBe(0);
-    expect(result.stdout.trim()).toBe(memberRoot);
+    expect(result.stdout.trim()).toBe(join(workspaceRoot, member));
   });
 
   test.each([

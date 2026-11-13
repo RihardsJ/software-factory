@@ -21,7 +21,7 @@
     "includedScripts": ["lint", "typecheck", "test", "build"],
     "targets": {
       "test": {
-        "inputs": ["default", "^default", "{workspaceRoot}/.specify/scripts/bash/**/*"]
+        "inputs": ["default", "^default", "{workspaceRoot}/.specify/scripts/bash/**/*", "{workspaceRoot}/apps/reference/.specify/scripts/bash/**/*"]
       }
     }
   }

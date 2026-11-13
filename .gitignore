@@ -2,6 +2,8 @@ node_modules/
 .nx/
 dist/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
 .DS_Store
 .env
@@ -21,3 +23,7 @@ __pycache__/
 .pytest_cache/
 
 **/.claude/worktrees/
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+.vitest

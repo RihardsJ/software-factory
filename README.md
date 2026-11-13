@@ -2,7 +2,7 @@
 
 A learning project for building reliable, scalable web applications with Three.js graphics.
 The foundation uses a TypeScript Nx monorepo with npm workspaces and executable quality checks.
-It contains no application features or rendering implementation.
+The first local application, `apps/reference`, demonstrates a Three.js scene and its resource lifecycle.
 
 ## Prerequisites
 
@@ -25,6 +25,7 @@ Install dependencies and run all checks:
 
 ```sh
 npm ci
+npm run browsers:install
 npm run check
 ```
 
@@ -34,14 +35,36 @@ npm run check
 | `npm run typecheck` | Check every configured project and the root configuration. |
 | `npm test` | Run all Nx test targets once. |
 | `npm run test:watch` | Watch the factory tests during development. |
-| `npm run build` | Compile the factory tooling as Node.js ES modules. |
-| `npm run check` | Run all lint, type-check, test, and build targets through Nx. |
+| `npm run build` | Build the factory tooling and reference application. |
+| `npm run dev` | Start the reference application at `http://127.0.0.1:4200`. |
+| `npm run browsers:install` | Install the Chromium browser used for smoke tests. |
+| `npm run e2e` | Build the reference application and run browser checks against its production preview. |
+| `npm run check` | Run all lint, type-check, test, build, and browser targets through Nx. |
 | `npm run nx -- show projects` | List discovered workspace projects. |
 | `npm run nx -- graph` | Explore the project dependency graph. |
 | `npm run specify -- version` | Run the pinned Spec Kit CLI through uv. |
 
-The GitHub Actions workflow is configured to run `npm ci` and `npm run check` for pushes and pull requests.
+The GitHub Actions workflow installs dependencies and Chromium, then runs `npm run check` for pushes and pull requests.
 The workflow file does not configure branch protection or repository settings.
+
+## Run the reference application
+
+After setup, run `npm run dev` and open `http://127.0.0.1:4200`.
+Use the controls to pause animation, release the scene, or create a fresh scene.
+The application starts paused when the browser requests reduced motion.
+If WebGL cannot initialise or loses its context, the application displays a retry action.
+All visuals are generated locally. Runtime fonts and assets require no external requests.
+
+The repository also records Node.js 24.13.0 and npm 11.6.2 in Volta configuration.
+If your shell selects another Node.js version, select the recorded toolchain before installing dependencies.
+For Volta users, `volta run --node 24.13.0 --npm 11.6.2 npm run dev` selects it explicitly.
+
+`apps/reference/src/scene.ts` owns the renderer and graphics resources.
+`apps/reference/src/app.ts` owns the controls and fallback interface.
+Unit tests verify disposal, animation, resize, and failure behaviour through a renderer test seam.
+Playwright verifies the production build with real software WebGL, including rendering, controls, context loss, and responsive layout.
+The browser target is not cached. It runs against a fresh preview server on port 4300.
+These tests do not establish compatibility with every physical GPU or browser.
 
 ## Architecture decisions
 
@@ -55,6 +78,7 @@ Nx coordinates development tasks. It does not establish application scalability 
 
 The npm workspace patterns are `apps/*`, `libs/*`, and `tools/*`.
 The existing project is `@software-factory/factory` in `tools/factory/`.
+The browser project is `reference` in `apps/reference/`.
 The root Nx project, `software-factory`, checks shared configuration files.
 The root project disables automatic script discovery to prevent recursive task execution.
 Project scripts remain ordinary npm commands, coordinated by Nx.
@@ -142,12 +166,11 @@ Strict settings also check indexed access and optional properties.
 The root JavaScript configuration receives type checks through `checkJs`.
 ESLint checks code patterns, including unsafe operations that require type information.
 Vitest runs automated tests and supports future browser tooling.
-The current test verifies that Vitest can load the factory's TypeScript entry point.
-It proves toolchain integration only. It does not validate application behaviour or graphics.
+Factory tests verify toolchain integration and Spec Kit project scoping.
+Reference application tests verify scene behaviour and browser rendering.
 
 The factory uses ES modules and Node.js module resolution.
-No bundler, web framework, or Three.js dependency is selected yet.
-Add those tools with the first application specification.
+The reference application uses Vite and Three.js. A UI framework remains deferred.
 
 ## Spec Kit setup
 
@@ -179,11 +202,12 @@ Each member has an independent Spec Kit project within the shared Git repository
 | --- | --- | --- |
 | Workspace configuration and coordinated changes | `.specify/` | `specs/` |
 | Factory tooling behaviour | `tools/factory/.specify/` | `tools/factory/specs/` |
+| Reference application behaviour | `apps/reference/.specify/` | `apps/reference/specs/` |
 | Future Nx application or library | `<member>/.specify/` | `<member>/specs/` |
 
 The root features remain in place, including the original Nx foundation specification.
-The factory member has its own Claude skills and [constitution](tools/factory/.specify/memory/constitution.md).
-That constitution explicitly references the shared workspace principles. Spec Kit does not provide automatic inheritance.
+The factory and reference application each have their own Claude skills and local constitution.
+Each member constitution explicitly references the shared workspace principles. Spec Kit does not provide automatic inheritance.
 Each project numbers features independently.
 Git branches and commits remain shared, so include a project name in feature branch descriptions to avoid collisions.
 The optional Spec Kit Git extension is not installed. The core feature helper creates documents without creating Git branches.
@@ -241,6 +265,7 @@ From the cloned repository, select Node.js 24.13.0 and install dependencies:
 
 ```sh
 npm ci
+npm run browsers:install
 npm run check
 claude
 ```
@@ -278,8 +303,8 @@ Workspace feature documents belong in the root `specs/<number>-<feature>/` direc
 Member feature documents belong in that member's `specs/<number>-<feature>/` directory.
 The [Nx workspace increment](specs/001-nx-workspace/spec.md) records this foundation's scope and verification requirements.
 For each increment, record what changed, why it changed, and which checks provide evidence.
-Choose a small rendering feature next, such as displaying and disposing of one Three.js scene.
-Define browser support, error states, and graphics verification within that specification.
+Use `apps/reference` for the next small rendering feature.
+Define browser support, error states, and graphics verification within its member specification.
 
 ## Repository layout
 
@@ -288,7 +313,8 @@ Define browser support, error states, and graphics verification within that spec
 .claude/settings.json    Official Nx Claude plugin configuration
 .github/workflows/      Continuous integration checks
 .specify/               Templates, scripts, configuration, and constitution
-apps/                   Future deployable applications
+apps/                   Deployable application workspaces
+apps/reference/         Local Three.js reference application and independent Spec Kit member
 libs/                   Future reusable runtime libraries
 tools/factory/          Factory workspace package, smoke test, and Node.js build
 tools/factory/.specify/  Independent factory member configuration and constitution
@@ -301,14 +327,17 @@ CLAUDE.md               Claude Code instructions importing shared project guidan
 ```
 
 The factory entry point is intentionally empty until a feature requires executable factory behaviour.
-Application rendering, framework selection, custom generators, deployment, and package publication remain deferred.
+UI framework selection, shared libraries, custom generators, deployment, and package publication remain deferred.
 
 ## Known dependency limitation
 
-On 13 November 2026, `npm audit` reported 15 moderate development dependency warnings after the Nx installation.
+On 13 November 2026, `npm audit` reported 20 moderate development dependency warnings after application setup.
 These warnings trace to one [minimatch advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249) in the linting dependency tree.
 The advisory concerns denial of service from attacker-controlled glob patterns.
 The patched `minimatch` major version exceeds the declared ranges of the installed linting dependencies.
 No forced downgrade or incompatible dependency override is applied.
 Recheck compatible upstream releases before expanding this foundation.
-The quality command runs linting, type checking, tests, and builds. It does not enforce an audit threshold.
+The quality command runs linting, type checking, unit tests, builds, and browser tests. It does not enforce an audit threshold.
+The current reference build also reports Vite's default warning for a JavaScript chunk above 500 kB.
+The initial measured bundle is approximately 543 kB minified and 135 kB compressed, including the Three.js renderer.
+No application performance budget has been established yet. The bundle warning remains visible.

@@ -4,25 +4,87 @@
   "neverConnectToCloud": true,
   "cacheDirectory": ".nx/cache",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "sharedGlobals": [
       "{workspaceRoot}/package.json",
       "{workspaceRoot}/package-lock.json",
       "{workspaceRoot}/nx.json",
       "{workspaceRoot}/tsconfig.base.json",
       "{workspaceRoot}/eslint.config.mjs",
-      { "runtime": "node --version" }
+      {
+        "runtime": "node --version"
+      }
     ]
   },
   "targetDefaults": {
-    "lint": { "cache": true, "inputs": ["default", "^default"] },
-    "typecheck": { "cache": true, "inputs": ["default", "^default"] },
-    "test": { "cache": true, "inputs": ["default", "^default"] },
+    "lint": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "typecheck": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
+    "test": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    },
     "build": {
       "cache": true,
-      "inputs": ["default", "^default"],
-      "outputs": ["{projectRoot}/dist"],
-      "dependsOn": ["^build"]
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ],
+      "dependsOn": [
+        "^build"
+      ]
     }
-  }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "include": [
+        "apps/reference/**/*"
+      ],
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "typecheckTargetName": "vite-typecheck"
+      }
+    },
+    {
+      "plugin": "@nx/playwright/plugin",
+      "include": [
+        "apps/reference/**/*"
+      ],
+      "options": {
+        "targetName": "e2e"
+      }
+    }
+  ],
+  "generators": {
+    "@nx/web:application": {
+      "style": "css",
+      "linter": "eslint",
+      "unitTestRunner": "vitest",
+      "e2eTestRunner": "playwright"
+    }
+  },
+  "analytics": false
 }
