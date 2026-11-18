@@ -16,12 +16,6 @@ playwright-report/
 **/.claude/settings.local.json
 CLAUDE.local.md
 
-# Spec Kit can create a local Python environment.
-.venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-
 **/.claude/worktrees/
 
 vite.config.*.timestamp*

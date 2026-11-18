@@ -9,7 +9,7 @@ const nxPlugin = /** @type {import('eslint').ESLint.Plugin} */ (
 );
 
 export default defineConfig(
-  { ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/test-results/**', '**/playwright-report/**', '.nx/**', '**/.specify/**', '**/.claude/**', '.agents/**'] },
+  { ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/test-results/**', '**/playwright-report/**', '.nx/**', '**/.claude/**', '.agents/**'] },
   {
     files: ['**/*.{js,mjs,cjs,ts,mts}'],
     extends: [js.configs.recommended, tseslint.configs.recommendedTypeChecked],

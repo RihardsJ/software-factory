@@ -1,13 +1,6 @@
 # Claude Code Project Instructions
 
 @AGENTS.md
-@.specify/memory/constitution.md
-
-Use the installed Spec Kit skills under `.claude/skills/`.
-Invoke workflow steps in Claude Code chat, starting with `/speckit-specify` for a new feature.
-Before invoking a workflow, choose the root or member Spec Kit project using the scope rules in `AGENTS.md`.
-For member work, read that member's constitution and resolve all workflow paths against the selected project.
-
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
