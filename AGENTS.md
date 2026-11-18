@@ -10,6 +10,7 @@ It contains role prompts, loop scripts and ticket formats. It contains no applic
 - `README.md`: what the factory is, what it needs from a host project, installer requirements.
 - `factory/`: files copied into a host project.
 - `install.sh`: installs or updates the factory in a host project.
+- `bootstrap.sh`: puts the `factory` command on a machine.
 - `bin/factory`: the `factory` command, which wraps the template and the installer.
 
 ## Rules for prompts and scripts

@@ -33,12 +33,19 @@ Everything the factory installs lives under `factory/` in the host project, so i
 factory/        Files copied into a host project
 install.sh      Installs or updates the factory in a host project
 bin/factory     The `factory` command
+bootstrap.sh    Puts the `factory` command on a machine
 AGENTS.md       Rules for working on the factory itself
 ```
 
 ## Install the command
 
-On a Linux machine, clone this repository to a fixed place and link the command onto your `PATH`:
+On a Linux machine, one command clones this repository to `~/.software-factory` and links `factory` into `~/.local/bin`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/RihardsJ/software-factory/main/bootstrap.sh | bash
+```
+
+Running it again updates the clone. To read the script before running it, open [bootstrap.sh](bootstrap.sh); it does the same as these three commands:
 
 ```sh
 git clone https://github.com/RihardsJ/software-factory.git ~/.software-factory
