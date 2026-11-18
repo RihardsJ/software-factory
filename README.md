@@ -67,11 +67,13 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 
 | Command | What it does |
 | --- | --- |
-| `factory new <name>` | Creates `./<name>` from [ts-project-template](https://github.com/RihardsJ/ts-project-template), names it, installs the factory, and makes the first commit |
+| `factory new <name>` | Creates `./<name>` from [ts-project-template](https://github.com/RihardsJ/ts-project-template), names it, installs the factory, makes the first commit, then runs the project's `setup.sh` |
 | `factory install [dir]` | Installs or updates the factory in an existing project, the current directory by default |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
 
-`factory new` creates a local Git repository only. It does not create a GitHub repository, install dependencies or run checks; the new project's README covers those.
+`factory new` creates a local Git repository only. It does not create a GitHub repository.
+Setup belongs to the template: when the new project has an executable `setup.sh`, the command runs it. The template's script installs dependencies and the test browser, then runs the check command, which takes a few minutes.
+A shell script cannot change the folder of the shell that started it, so `cd` into the project afterwards.
 Set `FACTORY_TEMPLATE` to a Git URL or path to start from a different template.
 
 To update a project, run `factory update`, then `factory install` in the project.

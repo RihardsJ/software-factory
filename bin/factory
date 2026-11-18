@@ -44,7 +44,14 @@ new_project() {
   git -C "$name" commit --quiet --message "Start $name from the project template with the factory installed" \
     || echo "factory: files are staged but not committed; set git user.name and user.email, then commit." >&2
 
-  echo "Created $name. Next: cd $name, then follow its README to install dependencies and run the check command."
+  # Setup belongs to the template, since only it knows its own toolchain.
+  if [ -x "$name/setup.sh" ]; then
+    echo "Created $name. Running its setup script..."
+    "$name/setup.sh" || fail "$name was created, but its setup script failed. Fix the cause, then run ./setup.sh in $name."
+    echo "$name is ready. Next: cd $name"
+  else
+    echo "Created $name. It has no setup.sh, so follow its README to install dependencies. Next: cd $name"
+  fi
 }
 
 case "${1:-}" in
