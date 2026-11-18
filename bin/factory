@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Resolved through the symlink that puts this command on PATH.
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+factory_home="$(cd "$(dirname "$self")/.." && pwd)"
+template="${FACTORY_TEMPLATE:-https://github.com/RihardsJ/ts-project-template.git}"
+
+fail() {
+  echo "factory: $1" >&2
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  factory new <name>      Create ./<name> from the project template and install the factory in it
+  factory install [dir]   Install or update the factory in an existing project (default: current directory)
+  factory update          Pull the latest factory
+EOF
+}
+
+new_project() {
+  local name="${1:-}"
+  [ -n "$name" ] || fail "give the project a name: factory new <name>"
+  case "$name" in
+    .*|*[!A-Za-z0-9._-]*) fail "use only letters, digits, dots, dashes and underscores in the name." ;;
+  esac
+  [ ! -e "$name" ] || fail "$name already exists here."
+
+  git clone --quiet --depth 1 "$template" "$name"
+  rm -rf "$name/.git"
+
+  # The template's own name would otherwise follow every project made from it.
+  for file in package.json package-lock.json; do
+    [ ! -f "$name/$file" ] || sed -i.bak "s/\"name\": \"ts-project-template\"/\"name\": \"$name\"/" "$name/$file"
+    rm -f "$name/$file.bak"
+  done
+
+  git -C "$name" init --quiet --initial-branch=main
+  "$factory_home/install.sh" "$name"
+
+  git -C "$name" add --all
+  git -C "$name" commit --quiet --message "Start $name from the project template with the factory installed" \
+    || echo "factory: files are staged but not committed; set git user.name and user.email, then commit." >&2
+
+  echo "Created $name. Next: cd $name, then follow its README to install dependencies and run the check command."
+}
+
+case "${1:-}" in
+  new) new_project "${2:-}" ;;
+  install) "$factory_home/install.sh" "${2:-.}" ;;
+  update) git -C "$factory_home" pull --ff-only ;;
+  -h|--help|help|'') usage ;;
+  *) usage >&2; exit 1 ;;
+esac
