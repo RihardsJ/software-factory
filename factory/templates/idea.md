@@ -19,6 +19,10 @@ Replace every section below with your own words. Half a page is enough.
 
 - <What this must not include yet.>
 
+## Assumptions
+
+- None.
+
 ## Undecided
 
 - <Anything you have not decided. The strategist will ask instead of guessing.>

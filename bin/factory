@@ -26,7 +26,7 @@ usage() {
 Usage:
   factory new <name>      Create ./<name> from the project template and install the factory in it
   factory install [dir]   Install or update the factory in an existing project (default: current directory)
-  factory idea [text]     In a project: answer a few questions and get specs/idea.md written
+  factory idea <text>     In a project: refine a sentence into specs/idea.md, for you to check
   factory plan            In a project: idea -> stories -> your approval -> tickets
   factory build [n]       In a project: build up to n tickets (default 3), one at a time
   factory update          Pull the latest factory

@@ -71,7 +71,7 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | --- | --- |
 | `factory new <name>` | Creates `./<name>` from [ts-project-template](https://github.com/RihardsJ/ts-project-template), names it, installs the factory, makes the first commit, then runs the project's `setup.sh` |
 | `factory install [dir]` | Installs or updates the factory in an existing project, the current directory by default |
-| `factory idea [text]` | In a project: interviews you, one question at a time, and writes `specs/idea.md` |
+| `factory idea <text>` | In a project: refines a sentence into `specs/idea.md` without asking anything, and lists every decision it made for you. `--interview` asks you instead |
 | `factory plan` | In a project: idea, stories, your approval, intel, tickets, ticket review |
 | `factory build [n]` | In a project: builds up to `n` tickets (default 3), one at a time |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
@@ -90,7 +90,9 @@ People write the idea and approve the stories. Scripts decide which step runs ne
 
 ### Plan
 
-Start with `factory idea`, or `factory idea "a sentence about what you want"`. It opens a Claude Code session that asks one question at a time, each with a suggested answer, shows you the draft, and saves it when you agree. Without a terminal it drafts from the text alone and lists what it would have asked under Undecided.
+Start with `factory idea "a sentence about what you want"`. It fills the gaps itself, with the simplest conventional choice for each, and writes `specs/idea.md`. Every decision it made that you did not state is listed under Assumptions, so checking the idea is one read. Only what cannot be chosen without facts you hold stays under Undecided.
+
+`factory idea` with no text refines an idea already in `specs/idea.md`. `factory idea --interview` asks you the questions one at a time instead of deciding for you.
 
 Then run `factory plan` from the project root. It stops whenever it needs you, and continues from what is on disk when you run it again.
 

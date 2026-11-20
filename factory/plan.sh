@@ -12,7 +12,7 @@ if [ ! -s specs/idea.md ] || cmp -s specs/idea.md "$factory_dir/templates/idea.m
   mkdir -p specs
   cp "$factory_dir/templates/idea.md" specs/idea.md
   say "There is no idea yet."
-  echo "Run 'factory idea' to be asked a few questions and have it written for you,"
+  echo "Run: factory idea \"<what you want, in a sentence>\"   to have it refined and written for you,"
   echo "or fill in specs/idea.md by hand. Then run this again."
   exit 0
 fi

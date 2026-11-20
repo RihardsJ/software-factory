@@ -20,6 +20,7 @@ Turn the idea in `specs/idea.md` into user stories with checkable acceptance cri
 - Every acceptance criterion is one observable behaviour in the form `WHEN <trigger> THEN <result>`, with real values where the idea gives them. If you cannot write it that way, it is not checkable yet: put it under Open questions instead.
 - Include the failure cases the idea implies: limits, empty input, invalid input.
 - Say what to build, never how. No file names, libraries or code.
+- Treat what the idea lists under Assumptions as decided, the same as its Rules.
 - If the idea leaves something undecided that would change a story, do not guess. List it under Open questions.
 
 ## Format
