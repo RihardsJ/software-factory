@@ -92,6 +92,8 @@ People write the idea and approve the stories. Scripts decide which step runs ne
 
 Start with `factory idea "a sentence about what you want"`. It fills the gaps itself, with the simplest conventional choice for each, and writes `specs/idea.md`. Every decision it made that you did not state is listed under Assumptions, so checking the idea is one read. Only what cannot be chosen without facts you hold stays under Undecided.
 
+Every agent runs headless, started by a script with a fixed prompt, limited tools and a spending cap. The one exception is `factory idea --interview`, where a person is the input.
+
 `factory idea` with no text refines an idea already in `specs/idea.md`. `factory idea --interview` asks you the questions one at a time instead of deciding for you.
 
 Then run `factory plan` from the project root. It stops whenever it needs you, and continues from what is on disk when you run it again.
@@ -138,6 +140,9 @@ Each run keeps every agent reply and check output under `factory/runs/<time>/`, 
 | Idea | Source |
 | --- | --- |
 | A fresh context per step, with state on disk | Geoffrey Huntley's Ralph loop |
+| Refining an idea makes it clearer, never different; everything the person did not say is listed as an assumption | super-simple-software-factory |
+| Informed guesses recorded as assumptions, at most three open questions, a fixed list of gaps to scan | GitHub Spec Kit |
+| One question at a time with a suggested answer; out of scope stated every time; no guessing when the ask is too thin | Addy Osmani's agent skills |
 | Scripts own the loop; agents work inside one step; checks run as code | super-simple-software-factory, Fabro |
 | Preflight, fail-closed approval, bounded fix loops, a reviewer that treats work as unproven | Fabro |
 | `WHEN ... THEN ...` scenarios as the contract between stories, tickets and review | OpenSpec |

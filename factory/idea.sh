@@ -43,12 +43,17 @@ agent interviewer "$tools" "Mode: refine
 Starting point: ${seed:-the idea already in specs/idea.md}"
 
 require_file specs/idea.md "the idea refiner"
-for section in "What it is" "What a user can do" "Rules" "Out of scope" "Assumptions" "Undecided"; do
+for section in "What it is" "Why" "What a user can do" "Rules" "Done means" "Out of scope" "Assumptions" "Undecided"; do
   require_line specs/idea.md "^## $section\$" "The refined idea is missing a section."
 done
 
 say "Refined idea, saved in specs/idea.md:"
 echo
 cat specs/idea.md
-say "Read the Assumptions: each is a decision made for you."
-echo "Edit specs/idea.md where one is wrong, answer anything under Undecided, then run: factory plan"
+undecided="$(awk '/^## Undecided/ { inside = 1; next } /^## / { inside = 0 } inside && /^- /' specs/idea.md | grep -v -i -E '^- none\.?$' || true)"
+say "Read the Assumptions: each is a decision made for you, the ones you would notice most first."
+if [ -n "$undecided" ]; then
+  echo "It also needs an answer from you, under Undecided, before planning can finish:"
+  echo "$undecided"
+fi
+echo "Edit specs/idea.md where something is wrong, then run: factory plan"

@@ -21,6 +21,7 @@ Turn the idea in `specs/idea.md` into user stories with checkable acceptance cri
 - Include the failure cases the idea implies: limits, empty input, invalid input.
 - Say what to build, never how. No file names, libraries or code.
 - Treat what the idea lists under Assumptions as decided, the same as its Rules.
+- Take each story's "so that" from the idea's Why. Every line under the idea's "Done means" must be covered by at least one acceptance criterion.
 - A small gap with a conventional answer is not an open question. Decide it with the simplest answer most people would expect, write the criterion with that answer, and record the decision under Decisions in one line.
 - Open questions are only for what you cannot decide: a contradiction in the idea, a choice that would add or remove a whole story, or anything the idea itself lists under Undecided. Do not guess those.
 
