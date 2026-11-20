@@ -14,6 +14,26 @@ version() {
   echo "$number${commit:+ ($commit)}"
 }
 
+# A project carries its own copy of the factory. Keep it in step with the
+# command, so 'factory update' alone is enough to get new behaviour.
+sync_project() {
+  local installed current
+  installed="$(sed -n 's/^version=//p' factory/.installed 2>/dev/null || true)"
+  current="$(version)"
+  [ "$installed" != "$current" ] || return 0
+  if [ -n "${FACTORY_PIN:-}" ]; then
+    echo "factory: this project has $installed and the command is $current. FACTORY_PIN is set, so it is left as it is." >&2
+    return 0
+  fi
+  "$factory_home/install.sh" . > /dev/null
+  if git rev-parse --git-dir > /dev/null 2>&1; then
+    git add --all -- factory CLAUDE.md
+    git diff --cached --quiet -- factory CLAUDE.md \
+      || git commit --quiet --message "Update factory to $current" -- factory CLAUDE.md
+  fi
+  echo "Updated the factory in this project: ${installed:-none} -> $current"
+}
+
 fail() {
   echo "factory: $1" >&2
   exit 1
@@ -26,9 +46,10 @@ usage() {
 Usage:
   factory new <name>      Create ./<name> from the project template and install the factory in it
   factory install [dir]   Install or update the factory in an existing project (default: current directory)
+  factory run <text>      In a project: idea, plan and build in one go, headless
   factory idea <text>     In a project: refine a sentence into specs/idea.md, for you to check
   factory plan            In a project: idea -> stories -> tickets; asks you only if questions remain
-  factory build [n]       In a project: build up to n tickets (default 3), one at a time
+  factory build [n]       In a project: the Ralph loop. One ticket per fresh run until none are left (at most n, default 25)
   factory status          In a project: where it stands and what is running (--watch to follow)
   factory update          Pull the latest factory
   factory -v              Show the version
@@ -78,10 +99,26 @@ case "${1:-}" in
     ;;
   -v|--version|version) echo "factory $(version)" ;;
   idea|plan|build|status)
-    [ -x "factory/$1.sh" ] || fail "no factory here. Run this from a project root after 'factory install'."
+    [ -x "factory/plan.sh" ] || fail "no factory here. Run this from a project root after 'factory install'."
+    sync_project
     command="$1"
     shift
     exec "factory/$command.sh" "$@"
+    ;;
+  run)
+    [ -x "factory/plan.sh" ] || fail "no factory here. Run this from a project root after 'factory install'."
+    sync_project
+    shift
+    # One command, start to finish. Each step stops the run if its gate fails.
+    if [ $# -gt 0 ] || [ ! -s specs/idea.md ]; then
+      factory/idea.sh "$@"
+      git add --all -- specs && { git diff --cached --quiet -- specs || git commit --quiet --message "factory: idea" -- specs; }
+    fi
+    factory/plan.sh
+    if grep -q '^Verdict: pass$' tickets/review.md 2>/dev/null; then
+      exec factory/build.sh
+    fi
+    echo "Planning stopped before the tickets were ready, so nothing was built. See above."
     ;;
   -h|--help|help|'') usage ;;
   *) usage >&2; exit 1 ;;

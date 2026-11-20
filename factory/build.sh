@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Builds tickets one at a time, each in fresh agent runs, until none are left
-# or a cap is reached. Usage: factory/build.sh [max-tickets]
+# The Ralph loop: the same builder prompt, run again and again in a fresh
+# context, one ticket per run, with the project's check command as backpressure.
+# What earlier runs did is on disk: the tickets, tickets/memory.md and Git.
+# It ends when no ticket is left, a ticket is blocked, or the cap is reached.
+# Usage: factory/build.sh [max-tickets]
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-max_tickets="${1:-${FACTORY_MAX_TICKETS:-3}}"
+max_tickets="${1:-${FACTORY_MAX_TICKETS:-25}}"
 max_attempts="${FACTORY_MAX_ATTEMPTS:-3}"
 builder_tools="$writer,Bash"
 reviewer_tools="$read_only,Bash(git diff:*),Bash(git status:*),Bash(git log:*),Bash(git show:*)"

@@ -71,9 +71,10 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | --- | --- |
 | `factory new <name>` | Creates `./<name>` from [ts-project-template](https://github.com/RihardsJ/ts-project-template), names it, installs the factory, makes the first commit, then runs the project's `setup.sh` |
 | `factory install [dir]` | Installs or updates the factory in an existing project, the current directory by default |
+| `factory run <text>` | In a project: idea, plan and build in one go. Each step stops the run if its gate fails |
 | `factory idea <text>` | In a project: refines a sentence into `specs/idea.md` without asking anything, and lists every decision it made for you. `--interview` asks you instead |
 | `factory plan` | In a project: stories, intel, tickets, ticket review. Stops for you only when the stories have open questions |
-| `factory build [n]` | In a project: builds up to `n` tickets (default 3), one at a time |
+| `factory build [n]` | In a project: the Ralph loop. One ticket per fresh run until none are left, at most `n` (default 25) |
 | `factory status` | In a project: each document and its gate, the ticket board, what is running, the latest run's events. `--watch` follows it |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
 | `factory -v` | Shows the version, as the number in `VERSION` and the commit it was built from |
@@ -83,19 +84,23 @@ Setup belongs to the template: when the new project has an executable `setup.sh`
 A shell script cannot change the folder of the shell that started it, so `cd` into the project afterwards.
 Set `FACTORY_TEMPLATE` to a Git URL or path to start from a different template.
 
-To update a project, run `factory update`, then `factory install` in the project.
+After `factory update`, the next `factory` command you run in a project brings that project's copy in step and commits the change. Set `FACTORY_PIN=1` to keep a project on the copy it has.
 
 ## How a project gets built
 
 People write the idea and approve the stories. Scripts decide which step runs next and whether work is accepted. An agent does one step in a fresh context and stops.
 
+### In one command
+
+`factory run "a sentence about what you want"` does all of it: refine the idea, plan it into reviewed tickets, then loop over the tickets until none are left. It stops early only when a gate fails or the stories have a question for you. Use the separate commands below when you want to read the idea before anything is planned.
+
 ### Plan
 
 Start with `factory idea "a sentence about what you want"`. It fills the gaps itself, with the simplest conventional choice for each, and writes `specs/idea.md`. Every decision it made that you did not state is listed under Assumptions, so checking the idea is one read. Only what cannot be chosen without facts you hold stays under Undecided.
 
-Every agent runs headless, started by a script with a fixed prompt, limited tools and a spending cap. The one exception is `factory idea --interview`, where a person is the input.
+Every agent runs headless, as `claude -p` started by a script with a fixed prompt, limited tools and a spending cap. Nothing opens an interactive session unless you ask for one with `factory idea --interview`.
 
-`factory idea` with no text refines an idea already in `specs/idea.md`. `factory idea --interview` asks you the questions one at a time instead of deciding for you.
+`factory idea` with no text refines an idea already in `specs/idea.md`, and refuses when there is none. `factory idea --interview` asks you the questions one at a time instead of deciding for you.
 
 Then run `factory plan` from the project root. It stops whenever it needs you, and continues from what is on disk when you run it again.
 
@@ -119,7 +124,9 @@ Each run keeps every agent reply, check output and an `events.log` under `factor
 
 ### Build
 
-Run `factory build` from the project root, with a clean working tree.
+Run `factory build` from the project root, with a clean working tree. This is a Ralph loop: the same builder prompt, run again and again, each time in a fresh context, one ticket per run. What earlier runs did is on disk, in the tickets, `tickets/memory.md` and Git, so no run needs the context of the one before. The project's check command is the backpressure.
+
+It differs from the plainest Ralph loop in three ways. The script picks the next ticket, so the order never depends on an agent's choice. The script runs the check command and decides whether work is accepted, so an agent cannot declare itself done. And a second fresh run reviews each ticket before it is committed.
 
 1. Preflight: the script runs the project's check command. If it fails before any work, the run stops, because no builder could turn it green.
 2. The script picks the lowest-numbered ticket with `Status: todo`.
@@ -139,10 +146,11 @@ Run `factory build` from the project root, with a clean working tree.
 | `FACTORY_CHECK` | from `specs/intel.md` | Overrides the check command on a machine that cannot run the full one |
 | `FACTORY_APPROVE` | `auto` | `manual` makes `factory plan` always stop for you to approve the stories |
 | `FACTORY_REVIEW_ROUNDS` | 3 | Writer and reviewer rounds for each planning document before the run stops |
-| `FACTORY_MAX_TICKETS` | 3 | Tickets per `factory build`, also its first argument |
+| `FACTORY_MAX_TICKETS` | 25 | The loop's cap: tickets per `factory build`, also its first argument |
 | `FACTORY_MAX_ATTEMPTS` | 3 | Builder attempts per ticket |
 | `FACTORY_BUDGET_USD` | 5 | Spending cap for each agent run |
 | `FACTORY_MODEL` | Claude Code's default | Model for every agent run |
+| `FACTORY_PIN` | unset | Set it to stop a project's copy of the factory being updated automatically |
 
 ### Where the ideas come from
 

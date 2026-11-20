@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Turns a rough idea into specs/idea.md, then lints and reviews it.
 # Usage: factory/idea.sh [--interview] [your idea in a sentence]
-#   with text, or with an idea already in specs/idea.md: refines it without asking anything
-#   --interview, or no text and no idea yet: asks you questions in the terminal
+#   with text, or with an idea already in specs/idea.md: refines it headless, asking nothing
+#   --interview: opens a session that asks you questions. Nothing else is ever interactive.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
@@ -19,9 +19,9 @@ if [ -f specs/idea.md ] && cmp -s specs/idea.md "$factory_dir/templates/idea.md"
   rm specs/idea.md
 fi
 
-# With nothing to start from, only the person can say what they want.
-if [ -z "$seed" ] && [ ! -s specs/idea.md ]; then
-  interview=yes
+# Every step runs headless unless a person asks to be interviewed.
+if [ "$interview" != yes ] && [ -z "$seed" ] && [ ! -s specs/idea.md ]; then
+  fail "say what you want: factory idea \"<a sentence>\". Add --interview to be asked questions instead."
 fi
 
 if [ "$interview" = yes ]; then
