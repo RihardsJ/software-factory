@@ -76,6 +76,7 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | `factory plan` | In a project: stories, intel, tickets, ticket review. Stops for you only when the stories have open questions |
 | `factory build [n]` | In a project: the Ralph loop. One ticket per fresh run until none are left, at most `n` (default 25) |
 | `factory status` | In a project: each document and its gate, the ticket board, what is running, the latest run's events. `--watch` follows it |
+| `factory stop` | In a project: stops the run in progress and the agent or check it started. Nothing else on the machine is touched |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
 | `factory -v` | Shows the version, as the number in `VERSION` and the commit it was built from |
 
@@ -119,6 +120,8 @@ The idea is judged again whenever you edit it, so a hand-written or hand-correct
 ### Watching it
 
 `factory status` shows each document with its gate result, the ticket board, whether anything is running, and the latest run's events. `factory status --watch` refreshes it every three seconds; run it in a second terminal while `factory plan` or `factory build` works.
+
+To stop a run, press Ctrl+C in its terminal, or run `factory stop` from the project in another one. No run is endless: the loop ends at its ticket cap, each ticket at its attempt cap, each planning document at its round cap, and each agent run at its spending cap.
 
 Each run keeps every agent reply, check output and an `events.log` under `factory/runs/<time>/`, which Git ignores. The documents themselves are committed at each step, so `git log` is the history of what the factory produced.
 

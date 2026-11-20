@@ -51,6 +51,7 @@ Usage:
   factory plan            In a project: idea -> stories -> tickets; asks you only if questions remain
   factory build [n]       In a project: the Ralph loop. One ticket per fresh run until none are left (at most n, default 25)
   factory status          In a project: where it stands and what is running (--watch to follow)
+  factory stop            In a project: stop the run in progress, and the agent it started
   factory update          Pull the latest factory
   factory -v              Show the version
 EOF
@@ -98,7 +99,7 @@ case "${1:-}" in
     echo "factory $(version)"
     ;;
   -v|--version|version) echo "factory $(version)" ;;
-  idea|plan|build|status)
+  idea|plan|build|status|stop)
     [ -x "factory/plan.sh" ] || fail "no factory here. Run this from a project root after 'factory install'."
     sync_project
     command="$1"
