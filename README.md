@@ -72,7 +72,7 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | `factory new <name>` | Creates `./<name>` from [ts-project-template](https://github.com/RihardsJ/ts-project-template), names it, installs the factory, makes the first commit, then runs the project's `setup.sh` |
 | `factory install [dir]` | Installs or updates the factory in an existing project, the current directory by default |
 | `factory idea <text>` | In a project: refines a sentence into `specs/idea.md` without asking anything, and lists every decision it made for you. `--interview` asks you instead |
-| `factory plan` | In a project: idea, stories, your approval, intel, tickets, ticket review |
+| `factory plan` | In a project: stories, intel, tickets, ticket review. Stops for you only when the stories have open questions |
 | `factory build [n]` | In a project: builds up to `n` tickets (default 3), one at a time |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
 | `factory -v` | Shows the version, as the number in `VERSION` and the commit it was built from |
@@ -100,7 +100,7 @@ Then run `factory plan` from the project root. It stops whenever it needs you, a
 | --- | --- | --- | --- | --- |
 | Idea | You, with `factory idea` or by hand | | `specs/idea.md` | The file exists and is not the untouched template |
 | Stories | Strategist | the idea | `specs/stories.md` | Every story has a MoSCoW rank and `WHEN ... THEN ...` lines |
-| Approval | You | the stories | `Status: approved` in that file | You changed the line. No change is never read as approval |
+| Approval | The script, or you | the stories | `Status: approved` in that file | No open questions: approved automatically. Any open question: it stops until you answer and approve. `FACTORY_APPROVE=manual` always stops |
 | Intel | Scout | the codebase, the project's instructions | `specs/intel.md` | It names the project's check command |
 | Tickets | Strategist | stories, intel | `tickets/NNN-*.md` | Each has a story, `Status: todo` and `WHEN ... THEN ...` lines |
 | Ticket review | A fresh run that did not write them | stories, intel, tickets | `tickets/review.md` | `Verdict: pass`. On a fail the strategist gets one round to fix the findings |
@@ -125,6 +125,7 @@ Run `factory build` from the project root, with a clean working tree.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `FACTORY_CHECK` | from `specs/intel.md` | Overrides the check command on a machine that cannot run the full one |
+| `FACTORY_APPROVE` | `auto` | `manual` makes `factory plan` always stop for you to approve the stories |
 | `FACTORY_MAX_TICKETS` | 3 | Tickets per `factory build`, also its first argument |
 | `FACTORY_MAX_ATTEMPTS` | 3 | Builder attempts per ticket |
 | `FACTORY_BUDGET_USD` | 5 | Spending cap for each agent run |

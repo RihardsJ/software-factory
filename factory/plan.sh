@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Idea (see idea.sh) -> stories -> (your approval) -> intel -> tickets -> ticket review.
+# Idea (see idea.sh) -> stories -> intel -> tickets -> ticket review.
+# It stops for you only when the stories have open questions.
 # Run it again after each stop; it continues from what is on disk.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -19,6 +20,12 @@ fi
 
 outside_before="$(changes_outside specs tickets)"
 
+# Bullets under "Open questions" other than "None."
+open_questions() {
+  awk '/^## Open questions/ { inside = 1; next } /^## / { inside = 0 } inside && /^- /' specs/stories.md \
+    | grep -v -i -E '^- none\.?$' || true
+}
+
 # Each role may write only under specs/ and tickets/.
 stayed_inside() {
   [ "$(changes_outside specs tickets)" = "$outside_before" ] \
@@ -32,11 +39,24 @@ if [ ! -s specs/stories.md ]; then
   require_line specs/stories.md '^Status: draft$' "The stories must start as a draft."
   require_line specs/stories.md '^## S[0-9]+ .*\((Must|Should|Could|Won.t)\)$' "Every story needs a MoSCoW rank."
   require_line specs/stories.md '^- \[ \] WHEN .* THEN ' "Stories need WHEN/THEN acceptance lines."
-  commit_paths "factory: draft stories" specs
-  say "Stories drafted in specs/stories.md."
-  echo "Read them, edit what is wrong, answer the open questions, then change"
-  echo "'Status: draft' to 'Status: approved' and run this again."
-  exit 0
+  require_line specs/stories.md '^## Open questions$' "Stories must say whether anything is still open."
+
+  # The person already checked the idea. Stories with nothing left to ask add
+  # no new decisions, so only an open question needs them back.
+  questions="$(open_questions)"
+  if [ -z "$questions" ] && [ "${FACTORY_APPROVE:-auto}" = auto ]; then
+    sed -i.bak 's/^Status: draft$/Status: approved/' specs/stories.md
+    rm -f specs/stories.md.bak
+    commit_paths "factory: stories, approved with no open questions" specs
+    say "Stories have no open questions, so they are approved. Continuing."
+  else
+    commit_paths "factory: draft stories" specs
+    say "Stories drafted in specs/stories.md. They need you before anything is built."
+    [ -z "$questions" ] || printf 'Open questions:\n%s\n\n' "$questions"
+    echo "Edit the file, answer the questions and set them to 'None.', then change"
+    echo "'Status: draft' to 'Status: approved' and run this again."
+    exit 0
+  fi
 fi
 
 # No approval is never read as approval.
@@ -53,7 +73,7 @@ if [ ! -s specs/intel.md ]; then
 fi
 
 if ls tickets/[0-9][0-9][0-9]-*.md > /dev/null 2>&1; then
-  say "Tickets already exist in tickets/. Delete them to plan again, or run factory/build.sh."
+  say "Tickets already exist in tickets/. Delete them to plan again, or run: factory build"
   exit 0
 fi
 
@@ -85,4 +105,4 @@ done
 commit_paths "factory: tickets" specs tickets
 say "Tickets written: $(ls tickets/[0-9][0-9][0-9]-*.md | wc -l | tr -d ' ')"
 grep -m1 '^Verdict: ' tickets/review.md || echo "The ticket review gave no verdict. Read tickets/review.md."
-echo "Read tickets/ and tickets/review.md, then run factory/build.sh."
+echo "Read tickets/ and tickets/review.md, then run: factory build"

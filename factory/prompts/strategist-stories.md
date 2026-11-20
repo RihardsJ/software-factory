@@ -17,11 +17,12 @@ Turn the idea in `specs/idea.md` into user stories with checkable acceptance cri
 - Cover the whole idea. Do not shrink it to an easier subset, and do not add features it does not ask for.
 - One story per user-visible capability. A story that needs "and" in its title is two stories.
 - Rank every story Must, Should, Could or Won't. Must means the idea fails without it. When unsure, rank lower and say why in one line.
-- Every acceptance criterion is one observable behaviour in the form `WHEN <trigger> THEN <result>`, with real values where the idea gives them. If you cannot write it that way, it is not checkable yet: put it under Open questions instead.
+- Every acceptance criterion is one observable behaviour in the form `WHEN <trigger> THEN <result>`, with real values where the idea gives them. If you cannot write it that way even after deciding small gaps, put it under Open questions instead.
 - Include the failure cases the idea implies: limits, empty input, invalid input.
 - Say what to build, never how. No file names, libraries or code.
 - Treat what the idea lists under Assumptions as decided, the same as its Rules.
-- If the idea leaves something undecided that would change a story, do not guess. List it under Open questions.
+- A small gap with a conventional answer is not an open question. Decide it with the simplest answer most people would expect, write the criterion with that answer, and record the decision under Decisions in one line.
+- Open questions are only for what you cannot decide: a contradiction in the idea, a choice that would add or remove a whole story, or anything the idea itself lists under Undecided. Do not guess those.
 
 ## Format
 
@@ -43,6 +44,10 @@ As a <role> I want <action> so that <value>.
 ## S2 <short title> (Should)
 
 ...
+
+## Decisions
+
+- <a small gap you decided, and the answer you chose>, or "None."
 
 ## Open questions
 
