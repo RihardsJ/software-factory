@@ -6,12 +6,22 @@ self="$(readlink -f "${BASH_SOURCE[0]}")"
 factory_home="$(cd "$(dirname "$self")/.." && pwd)"
 template="${FACTORY_TEMPLATE:-https://github.com/RihardsJ/ts-project-template.git}"
 
+# The number is set by hand in VERSION; the commit tells two builds of one number apart.
+version() {
+  local number commit
+  number="$(cat "$factory_home/VERSION" 2>/dev/null || echo unknown)"
+  commit="$(git -C "$factory_home" rev-parse --short HEAD 2>/dev/null || true)"
+  echo "$number${commit:+ ($commit)}"
+}
+
 fail() {
   echo "factory: $1" >&2
   exit 1
 }
 
 usage() {
+  echo "factory $(version)"
+  echo
   cat <<'EOF'
 Usage:
   factory new <name>      Create ./<name> from the project template and install the factory in it
@@ -19,6 +29,7 @@ Usage:
   factory plan            In a project: idea -> stories -> your approval -> tickets
   factory build [n]       In a project: build up to n tickets (default 3), one at a time
   factory update          Pull the latest factory
+  factory -v              Show the version
 EOF
 }
 
@@ -59,7 +70,11 @@ new_project() {
 case "${1:-}" in
   new) new_project "${2:-}" ;;
   install) "$factory_home/install.sh" "${2:-.}" ;;
-  update) git -C "$factory_home" pull --ff-only ;;
+  update)
+    git -C "$factory_home" pull --ff-only
+    echo "factory $(version)"
+    ;;
+  -v|--version|version) echo "factory $(version)" ;;
   plan|build)
     [ -x "factory/$1.sh" ] || fail "no factory here. Run this from a project root after 'factory install'."
     command="$1"

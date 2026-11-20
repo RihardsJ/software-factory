@@ -35,6 +35,7 @@ factory/        Files copied into a host project: role prompts, plan.sh, build.s
 install.sh      Installs or updates the factory in a host project
 bin/factory     The `factory` command
 bootstrap.sh    Puts the `factory` command on a machine
+VERSION         The factory's version number
 AGENTS.md       Rules for working on the factory itself
 ```
 
@@ -73,6 +74,7 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | `factory plan` | In a project: idea, stories, your approval, intel, tickets, ticket review |
 | `factory build [n]` | In a project: builds up to `n` tickets (default 3), one at a time |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
+| `factory -v` | Shows the version, as the number in `VERSION` and the commit it was built from |
 
 `factory new` creates a local Git repository only. It does not create a GitHub repository.
 Setup belongs to the template: when the new project has an executable `setup.sh`, the command runs it. The template's script installs dependencies and the test browser, then runs the check command, which takes a few minutes.

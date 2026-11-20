@@ -35,7 +35,8 @@ if [ -f "$manifest" ]; then
 fi
 
 mkdir -p "$host_dir/factory"
-version="$(git -C "$source_dir" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+commit="$(git -C "$source_dir" rev-parse --short HEAD 2>/dev/null || true)"
+version="$(cat "$source_dir/VERSION" 2>/dev/null || echo unknown)${commit:+ ($commit)}"
 echo "version=$version" > "$manifest"
 
 (cd "$source_dir/factory" && find . -type f ! -name .DS_Store | sed 's|^\./||' | sort) | while IFS= read -r file; do
