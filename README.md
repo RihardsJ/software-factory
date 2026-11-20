@@ -71,6 +71,7 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | --- | --- |
 | `factory new <name>` | Creates `./<name>` from [ts-project-template](https://github.com/RihardsJ/ts-project-template), names it, installs the factory, makes the first commit, then runs the project's `setup.sh` |
 | `factory install [dir]` | Installs or updates the factory in an existing project, the current directory by default |
+| `factory idea [text]` | In a project: interviews you, one question at a time, and writes `specs/idea.md` |
 | `factory plan` | In a project: idea, stories, your approval, intel, tickets, ticket review |
 | `factory build [n]` | In a project: builds up to `n` tickets (default 3), one at a time |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
@@ -89,11 +90,13 @@ People write the idea and approve the stories. Scripts decide which step runs ne
 
 ### Plan
 
-Run `factory plan` from the project root. It stops whenever it needs you, and continues from what is on disk when you run it again.
+Start with `factory idea`, or `factory idea "a sentence about what you want"`. It opens a Claude Code session that asks one question at a time, each with a suggested answer, shows you the draft, and saves it when you agree. Without a terminal it drafts from the text alone and lists what it would have asked under Undecided.
+
+Then run `factory plan` from the project root. It stops whenever it needs you, and continues from what is on disk when you run it again.
 
 | Step | Who | Reads | Writes | Accepted when |
 | --- | --- | --- | --- | --- |
-| Idea | You | | `specs/idea.md` | The file exists. The first run creates it from a template |
+| Idea | You, with `factory idea` or by hand | | `specs/idea.md` | The file exists and is not the untouched template |
 | Stories | Strategist | the idea | `specs/stories.md` | Every story has a MoSCoW rank and `WHEN ... THEN ...` lines |
 | Approval | You | the stories | `Status: approved` in that file | You changed the line. No change is never read as approval |
 | Intel | Scout | the codebase, the project's instructions | `specs/intel.md` | It names the project's check command |

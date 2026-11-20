@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Idea -> stories -> (your approval) -> intel -> tickets -> ticket review.
+# Idea (see idea.sh) -> stories -> (your approval) -> intel -> tickets -> ticket review.
 # Run it again after each stop; it continues from what is on disk.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -7,10 +7,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 read_only="Read,Glob,Grep"
 writer="Read,Glob,Grep,Write,Edit"
 
-if [ ! -s specs/idea.md ]; then
+# An untouched template is not an idea yet.
+if [ ! -s specs/idea.md ] || cmp -s specs/idea.md "$factory_dir/templates/idea.md"; then
   mkdir -p specs
   cp "$factory_dir/templates/idea.md" specs/idea.md
-  say "Created specs/idea.md from the template. Describe what you want, then run this again."
+  say "There is no idea yet."
+  echo "Run 'factory idea' to be asked a few questions and have it written for you,"
+  echo "or fill in specs/idea.md by hand. Then run this again."
   exit 0
 fi
 
