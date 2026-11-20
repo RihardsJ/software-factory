@@ -30,7 +30,8 @@ Implement one ticket, with tests, so that the project's check command passes. Th
 - Make the smallest change that satisfies the ticket. Follow the patterns already in the codebase. No refactoring of unrelated code, no new dependency for a few lines.
 - Run the project's check command, as named in the project's own instructions, before you finish. Judge it by its exit status, not by reading its output for words like "error".
 - If the check fails, fix the cause and run it again. Do not stop while it is red unless you are blocked.
-- Do not commit. The harness commits accepted work.
+- Do not commit, push or change Git settings. The harness commits accepted work, and nothing leaves this machine.
+- Work only inside this project folder.
 - If you are blocked by something you cannot fix, such as a missing tool or a contradiction in the ticket, stop and say exactly what blocks you. Do not work around it.
 
 ## Report

@@ -19,7 +19,9 @@ Break the approved stories into small, ordered tickets that a builder can finish
 
 - Tickets cover every Must story first, then Should. Leave out Could and Won't.
 - Never ask for something `specs/intel.md` says already exists. Build on it.
-- Each ticket is a thin vertical slice: one behaviour, working end to end and tested, small enough for one run. If a ticket needs more than about five acceptance lines, split it.
+- One ticket per story, carrying all of that story's acceptance lines, is the default. A ticket is a slice of working behaviour a user would notice, built and tested end to end in one run.
+- Split a story into two tickets only when it has more than about ten acceptance lines or holds two capabilities that could ship separately. Never split to isolate edge cases: the edges of a behaviour belong in the ticket that builds it.
+- Every ticket must change what the application does. Never write a ticket that only adds tests or only confirms something already true; put such a line in the ticket for the behaviour it protects.
 - Order by dependency. A ticket may depend only on lower-numbered tickets.
 - A ticket must stand alone: a builder who reads only that ticket and `specs/intel.md` can do the work.
 - Copy acceptance criteria from the story they come from, word for word, as the ticket's "Done when" lines. Every Must and Should criterion appears in exactly one ticket. Add none of your own.

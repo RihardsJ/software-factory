@@ -2,14 +2,18 @@
 # The Ralph loop: the same builder prompt, run again and again in a fresh
 # context, one ticket per run, with the project's check command as backpressure.
 # What earlier runs did is on disk: the tickets, tickets/memory.md and Git.
-# It ends when no ticket is left, a ticket is blocked, or the cap is reached.
+# When no ticket is left, an auditor uses the result as a user would; any gap
+# becomes a new ticket and the loop goes on. It ends when the audit accepts the
+# work, a ticket is blocked, or a cap is reached.
 # Usage: factory/build.sh [max-tickets]
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 max_tickets="${1:-${FACTORY_MAX_TICKETS:-25}}"
 max_attempts="${FACTORY_MAX_ATTEMPTS:-3}"
+max_audits="${FACTORY_MAX_AUDITS:-2}"
 builder_tools="$writer,Bash"
+auditor_tools="$read_only,Bash"
 reviewer_tools="$read_only,Bash(git diff:*),Bash(git status:*),Bash(git log:*),Bash(git show:*)"
 
 check="$(check_command)"
@@ -26,16 +30,80 @@ run_check() {
   bash -c "$check" > "$check_log" 2>&1
 }
 
+tickets_with() {
+  grep -l "^Status: $1\$" tickets/[0-9][0-9][0-9]-*.md 2>/dev/null | sort || true
+}
+
+# The auditor uses the finished work as a user would. Returns 0 when it accepts
+# it; otherwise it writes the gaps as a new ticket for the loop to build.
+audit() {
+  local number gaps
+  agent auditor "$auditor_tools" "" "$no_reach"
+  # An auditor only looks. Anything it left behind is removed.
+  if [ -n "$(git status --porcelain)" ]; then
+    git reset --quiet --hard HEAD
+    git clean --quiet -fd
+    note "the auditor changed files; they were restored"
+  fi
+  cp "$last_log" specs/acceptance.md
+  if grep -q '^Verdict: accepted$' specs/acceptance.md; then
+    commit_paths "factory: accepted against the idea" specs
+    return 0
+  fi
+
+  gaps="$(grep -E '^- \[ \] WHEN .* THEN ' specs/acceptance.md || true)"
+  [ -n "$gaps" ] || fail "the audit did not accept the work and named no checkable gap. Read specs/acceptance.md."
+  number="$(printf '%03d' $(( 10#$(ls tickets/[0-9][0-9][0-9]-*.md | sed 's|tickets/||; s|-.*||' | sort | tail -1) + 1 )))"
+  cat > "tickets/$number-close-acceptance-gaps.md" <<EOF
+# $number Close acceptance gaps
+
+Status: todo
+Story: acceptance audit
+Depends on: none
+
+## Why
+
+Every ticket was built and passed its checks, but using the result as a user would showed it does not yet do everything the idea says.
+
+## Change
+
+Each behaviour below was expected from specs/idea.md and was not observed. Make each one true. The full audit, with what was observed instead, is in specs/acceptance.md.
+
+## Done when
+
+$gaps
+
+## Out of scope
+
+- Anything the audit did not name.
+EOF
+  commit_paths "factory: audit found gaps" specs tickets
+  note "audit: $(echo "$gaps" | wc -l | tr -d ' ') gap(s), written as ticket $number"
+  return 1
+}
+
 # A check that is red before any work can never be turned green by a builder.
 say "Preflight: $check"
 run_check || fail "the check command fails before any work has started. Fix the project, or set FACTORY_CHECK to a command this machine can run. Output: $check_log"
 
 built=0
+audits=0
+accepted_whole=unknown
 while [ "$built" -lt "$max_tickets" ]; do
-  ticket="$(grep -l '^Status: todo$' tickets/[0-9][0-9][0-9]-*.md 2>/dev/null | sort | head -1 || true)"
+  ticket="$(tickets_with todo | head -1)"
   if [ -z "$ticket" ]; then
-    say "No tickets left to build."
-    break
+    # Each ticket passed alone. Whether the whole does what was asked is a separate question.
+    if [ ! -s specs/idea.md ] || [ "$audits" -ge "$max_audits" ]; then
+      break
+    fi
+    audits=$((audits + 1))
+    say "No tickets left. Auditing the result against the idea ($audits of $max_audits)"
+    if audit; then
+      accepted_whole=yes
+      break
+    fi
+    accepted_whole=no
+    continue
   fi
   title="$(sed -n '1s/^# //p' "$ticket")"
   say "Ticket: $title"
@@ -45,13 +113,20 @@ while [ "$built" -lt "$max_tickets" ]; do
   attempt=0
   while [ "$attempt" -lt "$max_attempts" ]; do
     attempt=$((attempt + 1))
+    head_before="$(git rev-parse HEAD)"
     agent builder "$builder_tools" "Ticket: $ticket
 Attempt: $attempt of $max_attempts
-$feedback"
+$feedback" "$no_reach"
 
     # The agent proposes; these checks decide.
+    if [ "$(git rev-parse HEAD)" != "$head_before" ]; then
+      git reset --quiet --soft "$head_before"
+      note "the builder committed; the commit was undone and its changes kept"
+    fi
+
     protected="$(git status --porcelain --untracked-files=all -- specs factory tickets | cut -c4- | grep -v '^tickets/memory\.md$' || true)"
     if [ -n "$protected" ]; then
+      git reset --quiet -- specs factory tickets
       git checkout --quiet HEAD -- specs factory tickets 2>/dev/null || true
       git clean --quiet -fd -- specs factory tickets
       feedback="Your last attempt changed files you must never touch, so they were restored:
@@ -106,4 +181,16 @@ $(cat "$last_log")"
   fi
 done
 
-say "Built $built ticket(s) this run. Remaining: $(grep -l '^Status: todo$' tickets/[0-9][0-9][0-9]-*.md 2>/dev/null | wc -l | tr -d ' ')"
+remaining="$(tickets_with todo | wc -l | tr -d ' ')"
+say "Built $built ticket(s) this run. Remaining: $remaining"
+case "$accepted_whole" in
+  yes) echo "The audit accepted the result against the idea. See specs/acceptance.md." ;;
+  no)
+    if [ "$remaining" = 0 ]; then
+      echo "The last audit found gaps and a ticket to close them was built, but the cap of $max_audits audits was reached before the result could be audited again. Run 'factory build' to audit it once more."
+    else
+      echo "The audit found gaps. They are in specs/acceptance.md and in the ticket still to do."
+    fi
+    ;;
+  *) [ "$remaining" = 0 ] || echo "Stopped at the cap of $max_tickets. Run 'factory build' again to continue." ;;
+esac

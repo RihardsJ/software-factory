@@ -10,6 +10,10 @@ read_only="Read,Glob,Grep"
 writer="Read,Glob,Grep,Write,Edit"
 step=0
 rounds="${FACTORY_REVIEW_ROUNDS:-3}"
+
+# Commands no role has a reason to run: publishing, changing where Git points,
+# and reaching other machines. This is a deny list, not a sandbox.
+no_reach="Bash(git push:*),Bash(git remote:*),Bash(git config:*),Bash(gh:*),Bash(sudo:*),Bash(ssh:*),Bash(scp:*)"
 last_log=""
 run_dir=""
 
@@ -28,10 +32,10 @@ say() { printf '\n== %s\n' "$*"; event "$*"; }
 note() { echo "   $*"; event "  $*"; }
 fail() { echo "factory: $*" >&2; event "STOPPED: $*"; exit 1; }
 
-# agent <role> <allowed tools> [inputs]
+# agent <role> <allowed tools> [inputs] [denied tools]
 # Runs one role in a fresh context. Its reply lands in $last_log.
 agent() {
-  local role="$1" tools="$2" inputs="${3:-}" prompt
+  local role="$1" tools="$2" inputs="${3:-}" denied="${4:-}" prompt
   prompt="$(cat "$factory_dir/prompts/$role.md")"
   if [ -n "$inputs" ]; then
     prompt="$prompt
@@ -47,9 +51,16 @@ $inputs"
 
   local args=(-p "$prompt" --allowedTools "$tools" --max-budget-usd "${FACTORY_BUDGET_USD:-5}")
   [ -z "${FACTORY_MODEL:-}" ] || args+=(--model "$FACTORY_MODEL")
+  [ -z "$denied" ] || args+=(--disallowedTools "$denied")
 
+  # An agent run gets no GitHub or Git credentials, so even a command that
+  # slips past the deny list cannot publish anything.
   # Warnings go to their own file so a reply holds only what the role said.
-  if ! "${FACTORY_AGENT:-claude}" "${args[@]}" < /dev/null > "$last_log" 2> "$last_log.err"; then
+  mkdir -p "$run_dir/.no-credentials"
+  if ! env GH_CONFIG_DIR="$run_dir/.no-credentials" GH_TOKEN= GITHUB_TOKEN= \
+      GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND=false \
+      GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= \
+      "${FACTORY_AGENT:-claude}" "${args[@]}" < /dev/null > "$last_log" 2> "$last_log.err"; then
     tail -5 "$last_log" "$last_log.err" >&2
     fail "the $role run did not finish. See $last_log"
   fi

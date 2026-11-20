@@ -32,7 +32,7 @@ The factory runs in projects it has never seen. Another project may use pnpm, Je
 - Before writing tickets, the strategist reads what the host project already contains: its design, code and reusable modules. A ticket must not ask for something that exists.
 - A ticket states how it is known to be done, in a form that can become a test.
 - Every document a later step reads passes a gate first: a lint in `factory/lib.sh`, then a review by a role that did not write it. Add both when you add a document.
-- Give each role only the permissions its files require.
+- Give each role only the permissions its files require. A role that runs commands gets the deny list in `factory/lib.sh`.
 
 ## Rules for installed files
 

@@ -6,7 +6,9 @@ It installs on top of an existing project. It does not set one up.
 ## Status
 
 Working: refining an idea, planning it into tickets with a lint and a review gate on every document, building one ticket at a time, and a status view.
-Not built yet: a web panel, publishing tickets to GitHub issues, browser checks by an agent, and scenarios kept out of the builder's reach.
+Not built yet: a web panel, publishing tickets to GitHub issues, and browser checks by an agent.
+
+Known limits: the factory writes its own acceptance criteria from your idea, so no person defines the checks and nothing is held back from the builder; the reviews are the same model judging its own kind of work; and an agent run is restricted but not sandboxed.
 
 ## How it fits with a project
 
@@ -111,7 +113,7 @@ Then run `factory plan` from the project root. It stops whenever it needs you, a
 | Stories | Strategist | `specs/stories.md` | Unique story numbers, every story has `WHEN ... THEN ...` lines | Every capability, rule and "Done means" line of the idea is covered; nothing invented; ranks fit |
 | Approval | The script, or you | `Status: approved` | No open questions: approved automatically. Any open question: it stops for you | |
 | Intel | Scout | `specs/intel.md` | It names the project's check command | |
-| Tickets | Strategist | `tickets/NNN-*.md` | Every Must and Should acceptance line appears in exactly one ticket, word for word; dependencies point to earlier tickets that exist | Nothing invented, nothing already built, one behaviour per ticket, each ticket stands alone |
+| Tickets | Strategist | `tickets/NNN-*.md` | Every Must and Should acceptance line appears in exactly one ticket, word for word; dependencies point to earlier tickets that exist | Nothing invented, nothing already built, one ticket per story and none that only adds tests, each ticket stands alone |
 
 Each document passes a gate before the next step reads it. The lint runs first because it costs nothing; the review is a separate agent run that did not write the document. A failed gate sends the findings back to the writer, for up to three rounds. If it still fails, planning stops, and `factory build` refuses tickets that did not pass. Each review is kept beside its document: `specs/idea.review.md`, `specs/stories.review.md`, `tickets/review.md`.
 
@@ -141,6 +143,14 @@ It differs from the plainest Ralph loop in three ways. The script picks the next
    - the check passes: a reviewer in a fresh context, with read-only tools, rules on every "Done when" line against the staged diff.
 5. Approved: the script marks the ticket done, ticks its boxes and commits. Then the next ticket.
 6. Not accepted after three attempts: the work is thrown away, the ticket is marked blocked with the last feedback, and the run stops.
+7. No tickets left: an auditor uses the result as a user would, by starting the application or calling the module, and rules on every "Done means" line of the idea from what it observes. Passing tests do not count. The audit is saved as `specs/acceptance.md`.
+8. Any gap the audit finds becomes a new ticket, and the loop builds it and audits again, up to two audits.
+
+### What an agent run can reach
+
+Every agent run starts without GitHub or Git credentials, so nothing it does can publish. Builder and auditor runs also carry a deny list: pushing, changing remotes or Git settings, `gh`, `sudo`, `ssh` and `scp`. If a builder commits, the script undoes the commit and keeps the changes for its own checks.
+
+This is not a sandbox. A builder can still run any other command as your user, so it can read and change files outside the project. On a machine you share or care about, run the factory inside a container.
 
 ### Settings
 
@@ -151,6 +161,7 @@ It differs from the plainest Ralph loop in three ways. The script picks the next
 | `FACTORY_REVIEW_ROUNDS` | 3 | Writer and reviewer rounds for each planning document before the run stops |
 | `FACTORY_MAX_TICKETS` | 25 | The loop's cap: tickets per `factory build`, also its first argument |
 | `FACTORY_MAX_ATTEMPTS` | 3 | Builder attempts per ticket |
+| `FACTORY_MAX_AUDITS` | 2 | Acceptance audits per `factory build` |
 | `FACTORY_BUDGET_USD` | 5 | Spending cap for each agent run |
 | `FACTORY_MODEL` | Claude Code's default | Model for every agent run |
 | `FACTORY_PIN` | unset | Set it to stop a project's copy of the factory being updated automatically |
