@@ -5,7 +5,8 @@ It installs on top of an existing project. It does not set one up.
 
 ## Status
 
-The installer works. It installs the factory's rules for agents and nothing else yet: the first role, the strategist, is being built.
+Working: planning (idea to reviewed tickets) and building (one ticket at a time, checked and reviewed before it is committed).
+Not built yet: publishing tickets to GitHub issues, browser checks by an agent, and scenarios kept out of the builder's reach.
 
 ## How it fits with a project
 
@@ -30,7 +31,7 @@ The factory reads its commands from there. It never assumes them.
 Everything the factory installs lives under `factory/` in the host project, so it can be updated or removed without touching the project's own files.
 
 ```text
-factory/        Files copied into a host project
+factory/        Files copied into a host project: role prompts, plan.sh, build.sh
 install.sh      Installs or updates the factory in a host project
 bin/factory     The `factory` command
 bootstrap.sh    Puts the `factory` command on a machine
@@ -69,6 +70,8 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | --- | --- |
 | `factory new <name>` | Creates `./<name>` from [ts-project-template](https://github.com/RihardsJ/ts-project-template), names it, installs the factory, makes the first commit, then runs the project's `setup.sh` |
 | `factory install [dir]` | Installs or updates the factory in an existing project, the current directory by default |
+| `factory plan` | In a project: idea, stories, your approval, intel, tickets, ticket review |
+| `factory build [n]` | In a project: builds up to `n` tickets (default 3), one at a time |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
 
 `factory new` creates a local Git repository only. It does not create a GitHub repository.
@@ -77,6 +80,61 @@ A shell script cannot change the folder of the shell that started it, so `cd` in
 Set `FACTORY_TEMPLATE` to a Git URL or path to start from a different template.
 
 To update a project, run `factory update`, then `factory install` in the project.
+
+## How a project gets built
+
+People write the idea and approve the stories. Scripts decide which step runs next and whether work is accepted. An agent does one step in a fresh context and stops.
+
+### Plan
+
+Run `factory plan` from the project root. It stops whenever it needs you, and continues from what is on disk when you run it again.
+
+| Step | Who | Reads | Writes | Accepted when |
+| --- | --- | --- | --- | --- |
+| Idea | You | | `specs/idea.md` | The file exists. The first run creates it from a template |
+| Stories | Strategist | the idea | `specs/stories.md` | Every story has a MoSCoW rank and `WHEN ... THEN ...` lines |
+| Approval | You | the stories | `Status: approved` in that file | You changed the line. No change is never read as approval |
+| Intel | Scout | the codebase, the project's instructions | `specs/intel.md` | It names the project's check command |
+| Tickets | Strategist | stories, intel | `tickets/NNN-*.md` | Each has a story, `Status: todo` and `WHEN ... THEN ...` lines |
+| Ticket review | A fresh run that did not write them | stories, intel, tickets | `tickets/review.md` | `Verdict: pass`. On a fail the strategist gets one round to fix the findings |
+
+### Build
+
+Run `factory build` from the project root, with a clean working tree.
+
+1. Preflight: the script runs the project's check command. If it fails before any work, the run stops, because no builder could turn it green.
+2. The script picks the lowest-numbered ticket with `Status: todo`.
+3. A builder implements that ticket with tests. It may not touch `specs/`, `factory/` or any ticket.
+4. The script, not the builder, decides what happens next:
+   - protected files changed: they are restored and the builder tries again;
+   - nothing changed: the builder tries again;
+   - the check command fails: its output goes back to the builder;
+   - the check passes: a reviewer in a fresh context, with read-only tools, rules on every "Done when" line against the staged diff.
+5. Approved: the script marks the ticket done, ticks its boxes and commits. Then the next ticket.
+6. Not accepted after three attempts: the work is thrown away, the ticket is marked blocked with the last feedback, and the run stops.
+
+### Settings
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `FACTORY_CHECK` | from `specs/intel.md` | Overrides the check command on a machine that cannot run the full one |
+| `FACTORY_MAX_TICKETS` | 3 | Tickets per `factory build`, also its first argument |
+| `FACTORY_MAX_ATTEMPTS` | 3 | Builder attempts per ticket |
+| `FACTORY_BUDGET_USD` | 5 | Spending cap for each agent run |
+| `FACTORY_MODEL` | Claude Code's default | Model for every agent run |
+
+Each run keeps every agent reply and check output under `factory/runs/<time>/`, which Git ignores.
+
+### Where the ideas come from
+
+| Idea | Source |
+| --- | --- |
+| A fresh context per step, with state on disk | Geoffrey Huntley's Ralph loop |
+| Scripts own the loop; agents work inside one step; checks run as code | super-simple-software-factory, Fabro |
+| Preflight, fail-closed approval, bounded fix loops, a reviewer that treats work as unproven | Fabro |
+| `WHEN ... THEN ...` scenarios as the contract between stories, tickets and review | OpenSpec |
+| One work unit per run, a short memory file, no state change until validated, a no-progress stop | spec-kit-ralph, Ralphy-Spec |
+| Thin vertical slices, tests first, review findings ranked by whether they block | Addy Osmani's agent skills, rrozza-kit |
 
 ## What the installer does
 

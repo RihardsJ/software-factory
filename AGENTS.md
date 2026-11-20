@@ -9,6 +9,8 @@ It contains role prompts, loop scripts and ticket formats. It contains no applic
 
 - `README.md`: what the factory is, what it needs from a host project, installer requirements.
 - `factory/`: files copied into a host project.
+- `factory/prompts/`: one file per role. Each names what it reads, what it writes and its rules.
+- `factory/plan.sh`, `factory/build.sh`, `factory/lib.sh`: the scripts that order the steps and accept or reject work.
 - `install.sh`: installs or updates the factory in a host project.
 - `bootstrap.sh`: puts the `factory` command on a machine.
 - `bin/factory`: the `factory` command, which wraps the template and the installer.
