@@ -5,8 +5,8 @@ It installs on top of an existing project. It does not set one up.
 
 ## Status
 
-Working: refining an idea, planning it into tickets with a lint and a review gate on every document, building one ticket at a time, and a status view.
-Not built yet: a web panel, publishing tickets to GitHub issues, and browser checks by an agent.
+Working: refining an idea, planning it into tickets with a lint and a review gate on every document, building one ticket at a time, an acceptance audit, and a control centre.
+Not built yet: publishing tickets to GitHub issues, browser checks by an agent, and token and cost figures per run.
 
 Known limits: the factory writes its own acceptance criteria from your idea, so no person defines the checks and nothing is held back from the builder; the reviews are the same model judging its own kind of work; and an agent run is restricted but not sandboxed.
 
@@ -78,6 +78,7 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | `factory plan` | In a project: stories, intel, tickets, ticket review. Stops for you only when the stories have open questions |
 | `factory build [n]` | In a project: the Ralph loop. One ticket per fresh run until none are left, at most `n` (default 25) |
 | `factory status` | In a project: each document and its gate, the ticket board, what is running, the latest run's events. `--watch` follows it |
+| `factory panel [port]` | In a project: the control centre, a web page with Status, Artifacts, Logs and Context tabs, and buttons to run and stop the factory |
 | `factory stop` | In a project: stops the run in progress and the agent or check it started. Nothing else on the machine is touched |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
 | `factory -v` | Shows the version, as the number in `VERSION` and the commit it was built from |
@@ -119,7 +120,22 @@ Each document passes a gate before the next step reads it. The lint runs first b
 
 The idea is judged again whenever you edit it, so a hand-written or hand-corrected idea goes through the same gate.
 
-### Watching it
+### The control centre
+
+`factory panel` starts a web page for the project and prints its address. It has four tabs:
+
+| Tab | Shows |
+| --- | --- |
+| Status | Each document with its gate result, the ticket board, the acceptance audit, the latest run's events, and buttons to run all, refine an idea, plan, build and stop |
+| Artifacts | Every document the factory produced, in the order it produced them, to read in full |
+| Logs | Every run, with its events and each agent reply and check output |
+| Context | What every agent run starts with, what each role reads and writes, and the exact prompt, tools and size of any past run step |
+
+It needs Node.js and nothing else. It listens on the machine it runs on only, and every request must carry the token in the printed address, because the page can start runs. On a remote machine, forward the port first: `ssh -L 4777:127.0.0.1:4777 <host>`, or let VS Code Remote SSH forward it.
+
+Runs started from the page use the environment the panel was started in, so set `FACTORY_CHECK` and the caps before `factory panel`.
+
+### Watching it from a terminal
 
 `factory status` shows each document with its gate result, the ticket board, whether anything is running, and the latest run's events. `factory status --watch` refreshes it every three seconds; run it in a second terminal while `factory plan` or `factory build` works.
 

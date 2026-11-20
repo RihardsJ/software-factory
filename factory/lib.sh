@@ -49,6 +49,10 @@ $inputs"
   last_log="$run_dir/$(printf '%02d' "$step")-$role.md"
   say "$role  (reply: ${last_log#"$project_dir"/})"
 
+  # Kept beside the reply, so what a run was given can be inspected afterwards.
+  printf '%s' "$prompt" > "$last_log.prompt"
+  printf 'role=%s\ntools=%s\ndenied=%s\nstarted=%s\n' "$role" "$tools" "$denied" "$(date +%H:%M:%S)" > "$last_log.meta"
+
   local args=(-p "$prompt" --allowedTools "$tools" --max-budget-usd "${FACTORY_BUDGET_USD:-5}")
   [ -z "${FACTORY_MODEL:-}" ] || args+=(--model "$FACTORY_MODEL")
   [ -z "$denied" ] || args+=(--disallowedTools "$denied")

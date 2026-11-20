@@ -11,6 +11,7 @@ It contains role prompts, loop scripts and ticket formats. It contains no applic
 - `factory/`: files copied into a host project.
 - `factory/prompts/`: one file per role. Each names what it reads, what it writes and its rules.
 - `factory/status.sh`: read-only view of a project's documents, gates, tickets and latest run.
+- `factory/panel.mjs`: the control centre, one Node.js file with no dependencies. It reads the same files as `status.sh` and starts the same scripts as the command.
 - `factory/idea.sh`, `factory/plan.sh`, `factory/build.sh`, `factory/lib.sh`: the scripts that order the steps and accept or reject work.
 - `install.sh`: installs or updates the factory in a host project.
 - `VERSION`: the factory's version number. Raise it in the same change as any change to `factory/`, `install.sh` or `bin/factory` that users will notice.
