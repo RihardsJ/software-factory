@@ -1,18 +1,32 @@
 #!/usr/bin/env bash
-# Shared by plan.sh and build.sh. The scripts own the order of steps, the
+# Shared by the factory's scripts. The scripts own the order of steps, the
 # checks and the decision that work is done; an agent only works inside one step.
 
 factory_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_dir="$(cd "$factory_dir/.." && pwd)"
 cd "$project_dir"
 
-run_dir="$factory_dir/runs/$(date +%Y%m%d-%H%M%S)"
-mkdir -p "$run_dir"
+read_only="Read,Glob,Grep"
+writer="Read,Glob,Grep,Write,Edit"
 step=0
+rounds="${FACTORY_REVIEW_ROUNDS:-3}"
 last_log=""
+run_dir=""
 
-say() { printf '\n== %s\n' "$*"; }
-fail() { echo "factory: $*" >&2; exit 1; }
+# status.sh only looks; every other script records a run it can be watched by.
+if [ -z "${FACTORY_LOOK_ONLY:-}" ]; then
+  run_dir="$factory_dir/runs/$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "$run_dir"
+  echo "$$ $(basename "$0" .sh) $run_dir" > "$factory_dir/runs/.active"
+  trap 'rm -f "$factory_dir/runs/.active"' EXIT
+fi
+
+event() {
+  [ -z "$run_dir" ] || echo "$(date +%H:%M:%S) $*" >> "$run_dir/events.log"
+}
+say() { printf '\n== %s\n' "$*"; event "$*"; }
+note() { echo "   $*"; event "  $*"; }
+fail() { echo "factory: $*" >&2; event "STOPPED: $*"; exit 1; }
 
 # agent <role> <allowed tools> [inputs]
 # Runs one role in a fresh context. Its reply lands in $last_log.
@@ -39,6 +53,87 @@ $inputs"
     tail -5 "$last_log" "$last_log.err" >&2
     fail "the $role run did not finish. See $last_log"
   fi
+}
+
+# judge <reviewer role> <lint function> <review file> [reviewer inputs]
+# A document moves on only after a mechanical lint and then a reviewer in a
+# fresh context both pass it. Lint runs first because it is free.
+judge() {
+  local role="$1" lint="$2" file="$3" inputs="${4:-}" findings
+  findings="$("$lint")"
+  if [ -n "$findings" ]; then
+    printf 'Verdict: fail\n\n## Findings\n\n%s\n' "$findings" > "$file"
+    note "lint: $(echo "$findings" | wc -l | tr -d ' ') problem(s)"
+    return 1
+  fi
+  note "lint: clean"
+  agent "$role" "$read_only" "$inputs"
+  cp "$last_log" "$file"
+  if grep -q '^Verdict: pass$' "$file"; then
+    note "review: pass"
+  else
+    note "review: fail"
+    return 1
+  fi
+}
+
+# Lines under one "## heading" of a Markdown file.
+section() {
+  awk -v heading="## $2" '$0 == heading { inside = 1; next } /^## / { inside = 0 } inside && NF' "$1"
+}
+
+# Bullets under a heading, leaving out a lone "None."
+open_items() {
+  section "$1" "$2" | grep '^- ' | grep -v -i -E '^- none\.?$' || true
+}
+
+idea_sections="What it is|Why|What a user can do|Rules|Done means|Out of scope|Assumptions|Undecided"
+
+lint_idea() {
+  local name vague
+  echo "$idea_sections" | tr '|' '\n' | while IFS= read -r name; do
+    [ -n "$(section specs/idea.md "$name")" ] || echo "- The section \"$name\" is missing or empty."
+  done
+  grep -n -E '^(- )?<[A-Za-z]' specs/idea.md | sed 's/^/- A template placeholder is still in the file, at line /' || true
+  if [ "$(open_items specs/idea.md Undecided | wc -l | tr -d ' ')" -gt 3 ]; then
+    echo "- More than three things are Undecided. Decide the ones with a conventional answer and list them under Assumptions."
+  fi
+  for name in "What a user can do" "Rules" "Done means"; do
+    vague="$(section specs/idea.md "$name" | grep -i -w -o -E 'sensible|appropriate|reasonable|user-friendly|intuitive|as needed|if needed|etc|TBD|and so on|some kind of' | sort -u | tr '\n' ' ' || true)"
+    [ -z "$vague" ] || echo "- \"$name\" uses words that cannot be checked: $vague. Replace each with a real value or result."
+  done
+}
+
+lint_stories() {
+  grep -o -E '^## S[0-9]+' specs/stories.md | sort | uniq -d | sed 's/^## /- This story number is used twice: /' || true
+  awk '
+    /^## S[0-9]+ / { if (title != "" && lines == 0) print "- This story has no WHEN/THEN acceptance line: " title; title = $0; lines = 0; next }
+    /^## /         { if (title != "" && lines == 0) print "- This story has no WHEN/THEN acceptance line: " title; title = "" }
+    /^- \[ \] WHEN .* THEN / { lines++ }
+    END            { if (title != "" && lines == 0) print "- This story has no WHEN/THEN acceptance line: " title }
+  ' specs/stories.md
+  grep -n '^- \[ \] ' specs/stories.md | grep -v -E 'WHEN .* THEN ' | sed 's/^/- This acceptance line is not in the WHEN ... THEN ... form, at line /' || true
+}
+
+# Acceptance lines of Must and Should stories: the lines tickets must carry.
+required_lines() {
+  awk '/^## S[0-9]+ / { keep = ($0 ~ /\((Must|Should)\)$/) } /^## [^S]/ { keep = 0 } keep && /^- \[ \] WHEN /' specs/stories.md
+}
+
+lint_tickets() {
+  local line count ticket number dependency
+  required_lines | while IFS= read -r line; do
+    count="$(cat tickets/[0-9][0-9][0-9]-*.md | grep -c -x -F -- "$line" || true)"
+    [ "$count" = 1 ] || echo "- This line from specs/stories.md appears $count times across the tickets. It must appear exactly once, word for word: $line"
+  done
+  for ticket in tickets/[0-9][0-9][0-9]-*.md; do
+    number="${ticket#tickets/}"
+    number="${number%%-*}"
+    for dependency in $(sed -n 's/^Depends on: //p' "$ticket" | grep -o -E '[0-9]{3}' || true); do
+      [ "$((10#$dependency))" -lt "$((10#$number))" ] || echo "- $ticket depends on $dependency, which is not an earlier ticket."
+      ls tickets/"$dependency"-*.md > /dev/null 2>&1 || echo "- $ticket depends on $dependency, which does not exist."
+    done
+  done
 }
 
 # Paths with uncommitted changes outside the folders given as arguments.

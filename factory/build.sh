@@ -6,12 +6,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 max_tickets="${1:-${FACTORY_MAX_TICKETS:-3}}"
 max_attempts="${FACTORY_MAX_ATTEMPTS:-3}"
-builder_tools="Read,Glob,Grep,Write,Edit,Bash"
-reviewer_tools="Read,Glob,Grep,Bash(git diff:*),Bash(git status:*),Bash(git log:*),Bash(git show:*)"
+builder_tools="$writer,Bash"
+reviewer_tools="$read_only,Bash(git diff:*),Bash(git status:*),Bash(git log:*),Bash(git show:*)"
 
 check="$(check_command)"
 [ -n "$check" ] || fail "no check command. Run factory/plan.sh first, or set FACTORY_CHECK."
 [ -z "$(git status --porcelain)" ] || fail "the working tree has uncommitted changes. Commit or stash them first."
+
+# Tickets that failed their review are not built.
+grep -q '^Verdict: pass$' tickets/review.md 2>/dev/null \
+  || fail "the tickets have not passed their review. See tickets/review.md, or run: factory plan"
 
 run_check() {
   step=$((step + 1))
@@ -49,13 +53,13 @@ $feedback"
       git clean --quiet -fd -- specs factory tickets
       feedback="Your last attempt changed files you must never touch, so they were restored:
 $protected"
-      echo "   rejected: protected files changed"
+      note "rejected: protected files changed"
       continue
     fi
 
     if [ -z "$(git status --porcelain)" ]; then
       feedback="Your last attempt changed no files. The ticket is not done."
-      echo "   rejected: nothing changed"
+      note "rejected: nothing changed"
       continue
     fi
 
@@ -63,7 +67,7 @@ $protected"
       feedback="The project's check command exited with a failure after your last attempt. Fix the cause. The end of its output:
 
 $(tail -c 4000 "$check_log")"
-      echo "   rejected: check command failed"
+      note "rejected: check command failed"
       continue
     fi
 
@@ -76,7 +80,7 @@ $(tail -c 4000 "$check_log")"
     feedback="A reviewer read your last attempt and did not approve it. Fix every item:
 
 $(cat "$last_log")"
-    echo "   rejected: reviewer asked for changes"
+    note "rejected: reviewer asked for changes"
   done
 
   if [ "$accepted" = yes ]; then

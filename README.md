@@ -5,8 +5,8 @@ It installs on top of an existing project. It does not set one up.
 
 ## Status
 
-Working: planning (idea to reviewed tickets) and building (one ticket at a time, checked and reviewed before it is committed).
-Not built yet: publishing tickets to GitHub issues, browser checks by an agent, and scenarios kept out of the builder's reach.
+Working: refining an idea, planning it into tickets with a lint and a review gate on every document, building one ticket at a time, and a status view.
+Not built yet: a web panel, publishing tickets to GitHub issues, browser checks by an agent, and scenarios kept out of the builder's reach.
 
 ## How it fits with a project
 
@@ -74,6 +74,7 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | `factory idea <text>` | In a project: refines a sentence into `specs/idea.md` without asking anything, and lists every decision it made for you. `--interview` asks you instead |
 | `factory plan` | In a project: stories, intel, tickets, ticket review. Stops for you only when the stories have open questions |
 | `factory build [n]` | In a project: builds up to `n` tickets (default 3), one at a time |
+| `factory status` | In a project: each document and its gate, the ticket board, what is running, the latest run's events. `--watch` follows it |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
 | `factory -v` | Shows the version, as the number in `VERSION` and the commit it was built from |
 
@@ -98,14 +99,23 @@ Every agent runs headless, started by a script with a fixed prompt, limited tool
 
 Then run `factory plan` from the project root. It stops whenever it needs you, and continues from what is on disk when you run it again.
 
-| Step | Who | Reads | Writes | Accepted when |
+| Step | Who | Writes | Lint (a script) | Review (a fresh agent run) |
 | --- | --- | --- | --- | --- |
-| Idea | You, with `factory idea` or by hand | | `specs/idea.md` | The file exists and is not the untouched template |
-| Stories | Strategist | the idea | `specs/stories.md` | Every story has a MoSCoW rank and `WHEN ... THEN ...` lines |
-| Approval | The script, or you | the stories | `Status: approved` in that file | No open questions: approved automatically. Any open question: it stops until you answer and approve. `FACTORY_APPROVE=manual` always stops |
-| Intel | Scout | the codebase, the project's instructions | `specs/intel.md` | It names the project's check command |
-| Tickets | Strategist | stories, intel | `tickets/NNN-*.md` | Each has a story, `Status: todo` and `WHEN ... THEN ...` lines |
-| Ticket review | A fresh run that did not write them | stories, intel, tickets | `tickets/review.md` | `Verdict: pass`. On a fail the strategist gets one round to fix the findings |
+| Idea | The refiner, or you | `specs/idea.md` | Every section filled, no template placeholders, no words that cannot be checked, at most three Undecided | Faithful to what you asked, nothing invented, every rule checkable, edges covered, no contradictions |
+| Stories | Strategist | `specs/stories.md` | Unique story numbers, every story has `WHEN ... THEN ...` lines | Every capability, rule and "Done means" line of the idea is covered; nothing invented; ranks fit |
+| Approval | The script, or you | `Status: approved` | No open questions: approved automatically. Any open question: it stops for you | |
+| Intel | Scout | `specs/intel.md` | It names the project's check command | |
+| Tickets | Strategist | `tickets/NNN-*.md` | Every Must and Should acceptance line appears in exactly one ticket, word for word; dependencies point to earlier tickets that exist | Nothing invented, nothing already built, one behaviour per ticket, each ticket stands alone |
+
+Each document passes a gate before the next step reads it. The lint runs first because it costs nothing; the review is a separate agent run that did not write the document. A failed gate sends the findings back to the writer, for up to three rounds. If it still fails, planning stops, and `factory build` refuses tickets that did not pass. Each review is kept beside its document: `specs/idea.review.md`, `specs/stories.review.md`, `tickets/review.md`.
+
+The idea is judged again whenever you edit it, so a hand-written or hand-corrected idea goes through the same gate.
+
+### Watching it
+
+`factory status` shows each document with its gate result, the ticket board, whether anything is running, and the latest run's events. `factory status --watch` refreshes it every three seconds; run it in a second terminal while `factory plan` or `factory build` works.
+
+Each run keeps every agent reply, check output and an `events.log` under `factory/runs/<time>/`, which Git ignores. The documents themselves are committed at each step, so `git log` is the history of what the factory produced.
 
 ### Build
 
@@ -128,12 +138,11 @@ Run `factory build` from the project root, with a clean working tree.
 | --- | --- | --- |
 | `FACTORY_CHECK` | from `specs/intel.md` | Overrides the check command on a machine that cannot run the full one |
 | `FACTORY_APPROVE` | `auto` | `manual` makes `factory plan` always stop for you to approve the stories |
+| `FACTORY_REVIEW_ROUNDS` | 3 | Writer and reviewer rounds for each planning document before the run stops |
 | `FACTORY_MAX_TICKETS` | 3 | Tickets per `factory build`, also its first argument |
 | `FACTORY_MAX_ATTEMPTS` | 3 | Builder attempts per ticket |
 | `FACTORY_BUDGET_USD` | 5 | Spending cap for each agent run |
 | `FACTORY_MODEL` | Claude Code's default | Model for every agent run |
-
-Each run keeps every agent reply and check output under `factory/runs/<time>/`, which Git ignores.
 
 ### Where the ideas come from
 

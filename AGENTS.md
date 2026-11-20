@@ -10,6 +10,7 @@ It contains role prompts, loop scripts and ticket formats. It contains no applic
 - `README.md`: what the factory is, what it needs from a host project, installer requirements.
 - `factory/`: files copied into a host project.
 - `factory/prompts/`: one file per role. Each names what it reads, what it writes and its rules.
+- `factory/status.sh`: read-only view of a project's documents, gates, tickets and latest run.
 - `factory/idea.sh`, `factory/plan.sh`, `factory/build.sh`, `factory/lib.sh`: the scripts that order the steps and accept or reject work.
 - `install.sh`: installs or updates the factory in a host project.
 - `VERSION`: the factory's version number. Raise it in the same change as any change to `factory/`, `install.sh` or `bin/factory` that users will notice.
@@ -30,6 +31,7 @@ The factory runs in projects it has never seen. Another project may use pnpm, Je
 - Each role reads named files and writes named files. Roles hand over through files, never through conversation.
 - Before writing tickets, the strategist reads what the host project already contains: its design, code and reusable modules. A ticket must not ask for something that exists.
 - A ticket states how it is known to be done, in a form that can become a test.
+- Every document a later step reads passes a gate first: a lint in `factory/lib.sh`, then a review by a role that did not write it. Add both when you add a document.
 - Give each role only the permissions its files require.
 
 ## Rules for installed files

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Turns a rough idea into specs/idea.md.
+# Turns a rough idea into specs/idea.md, then lints and reviews it.
 # Usage: factory/idea.sh [--interview] [your idea in a sentence]
 #   with text, or with an idea already in specs/idea.md: refines it without asking anything
 #   --interview, or no text and no idea yet: asks you questions in the terminal
@@ -12,7 +12,6 @@ if [ "${1:-}" = "--interview" ]; then
   shift
 fi
 seed="$*"
-tools="Read,Glob,Grep,Write,Edit"
 mkdir -p specs
 
 # An untouched template is not an idea, and would only confuse the refiner.
@@ -33,25 +32,50 @@ if [ "$interview" = yes ]; then
 
 Mode: interview
 Starting point: ${seed:-none given}"
-  "${FACTORY_AGENT:-claude}" "$prompt" --allowedTools "$tools" || true
+  "${FACTORY_AGENT:-claude}" "$prompt" --allowedTools "$writer" || true
   [ -s specs/idea.md ] || fail "no idea was saved. Run this again, or write specs/idea.md by hand."
-  say "Idea saved in specs/idea.md. Next: factory plan"
+  say "Idea saved in specs/idea.md. Next: factory plan, which lints and reviews it first."
   exit 0
 fi
 
-agent interviewer "$tools" "Mode: refine
-Starting point: ${seed:-the idea already in specs/idea.md}"
+# What the person asked for, kept so the reviewer can check nothing was lost.
+if [ -n "$seed" ]; then
+  starting_point="$seed"
+else
+  starting_point="$(cat specs/idea.md)"
+fi
 
-require_file specs/idea.md "the idea refiner"
-for section in "What it is" "Why" "What a user can do" "Rules" "Done means" "Out of scope" "Assumptions" "Undecided"; do
-  require_line specs/idea.md "^## $section\$" "The refined idea is missing a section."
+feedback=""
+passed=no
+for round in $(seq 1 "$rounds"); do
+  agent interviewer "$writer" "Mode: refine
+Starting point: $starting_point
+$feedback"
+  require_file specs/idea.md "the idea refiner"
+
+  if judge idea-review lint_idea specs/idea.review.md "Starting point: $starting_point"; then
+    passed=yes
+    break
+  fi
+  feedback="
+A review of your last draft found these problems. Edit specs/idea.md in place to fix every one:
+
+$(cat specs/idea.review.md)"
 done
 
 say "Refined idea, saved in specs/idea.md:"
 echo
 cat specs/idea.md
-undecided="$(awk '/^## Undecided/ { inside = 1; next } /^## / { inside = 0 } inside && /^- /' specs/idea.md | grep -v -i -E '^- none\.?$' || true)"
-say "Read the Assumptions: each is a decision made for you, the ones you would notice most first."
+
+if [ "$passed" != yes ]; then
+  echo
+  cat specs/idea.review.md
+  fail "the idea did not pass its review after $rounds rounds. The findings are above and in specs/idea.review.md. Fix specs/idea.md, then run: factory plan"
+fi
+
+undecided="$(open_items specs/idea.md Undecided)"
+say "The idea passed its lint and review."
+echo "Read the Assumptions: each is a decision made for you, the ones you would notice most first."
 if [ -n "$undecided" ]; then
   echo "It also needs an answer from you, under Undecided, before planning can finish:"
   echo "$undecided"

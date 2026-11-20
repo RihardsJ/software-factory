@@ -16,7 +16,7 @@ Judge the drafted tickets against the approved stories before any builder sees t
 
 ## Rules
 
-- Treat the tickets as unproven until you have checked each claim below against the files.
+- Treat the tickets as unproven until you have checked each claim below against the files. Report every problem you can find in this one pass.
 - Coverage: every acceptance criterion of every Must and Should story appears in exactly one ticket, word for word. List each one that is missing, duplicated or reworded.
 - Invention: flag any ticket or "Done when" line that no story asks for.
 - Reuse: flag any ticket asking for something `specs/intel.md` says exists.

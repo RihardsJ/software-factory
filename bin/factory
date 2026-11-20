@@ -29,6 +29,7 @@ Usage:
   factory idea <text>     In a project: refine a sentence into specs/idea.md, for you to check
   factory plan            In a project: idea -> stories -> tickets; asks you only if questions remain
   factory build [n]       In a project: build up to n tickets (default 3), one at a time
+  factory status          In a project: where it stands and what is running (--watch to follow)
   factory update          Pull the latest factory
   factory -v              Show the version
 EOF
@@ -76,7 +77,7 @@ case "${1:-}" in
     echo "factory $(version)"
     ;;
   -v|--version|version) echo "factory $(version)" ;;
-  idea|plan|build)
+  idea|plan|build|status)
     [ -x "factory/$1.sh" ] || fail "no factory here. Run this from a project root after 'factory install'."
     command="$1"
     shift
