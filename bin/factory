@@ -43,18 +43,28 @@ usage() {
   echo "factory $(version)"
   echo
   cat <<'EOF'
-Usage:
+Set up:
   factory new <name>      Create ./<name> from the project template and install the factory in it
   factory install [dir]   Install or update the factory in an existing project (default: current directory)
-  factory run <text>      In a project: idea, plan and build in one go, headless
-  factory idea <text>     In a project: refine a sentence into specs/idea.md, for you to check
-  factory plan            In a project: idea -> stories -> tickets; asks you only if questions remain
-  factory build [n]       In a project: the Ralph loop. One ticket per fresh run until none are left (at most n, default 25)
-  factory status          In a project: where it stands and what is running (--watch to follow)
-  factory panel [port]    In a project: the control centre, a web page to watch and run the factory
-  factory stop            In a project: stop the run in progress, and the agent it started
   factory update          Pull the latest factory
   factory -v              Show the version
+
+In a project, start a line of work:
+  factory run <text>      A new feature, from one sentence to built, audited and documented
+  factory fix <text>      A correction to something already built, the same way
+  factory ask <question>  Ask the manager about the project; it answers and names the next step
+
+In a project, step by step on the current line:
+  factory idea <text>     Open a feature line and refine its idea only (--bug for a correction)
+  factory plan            Idea -> stories -> tickets; asks you only if questions remain
+  factory build [n]       The Ralph loop: one ticket per fresh run until none are left (at most n, default 25)
+
+In a project, oversee:
+  factory status          Every line of work and the current one in detail (--watch to follow)
+  factory panel [port]    The control centre, a web page to watch and run the factory
+  factory stop            Stop the run in progress, and the agent it started
+
+FACTORY_LINE=<number> makes plan, build and idea act on that line instead of the newest open one.
 EOF
 }
 
@@ -107,27 +117,16 @@ case "${1:-}" in
     shift
     exec node factory/panel.mjs "$@"
     ;;
-  idea|plan|build|status|stop)
+  run|fix|idea|plan|build|ask|status|lines|stop)
     [ -x "factory/plan.sh" ] || fail "no factory here. Run this from a project root after 'factory install'."
     sync_project
     command="$1"
     shift
-    exec "factory/$command.sh" "$@"
-    ;;
-  run)
-    [ -x "factory/plan.sh" ] || fail "no factory here. Run this from a project root after 'factory install'."
-    sync_project
-    shift
-    # One command, start to finish. Each step stops the run if its gate fails.
-    if [ $# -gt 0 ] || [ ! -s specs/idea.md ]; then
-      factory/idea.sh "$@"
-      git add --all -- specs && { git diff --cached --quiet -- specs || git commit --quiet --message "factory: idea" -- specs; }
-    fi
-    factory/plan.sh
-    if grep -q '^Verdict: pass$' tickets/review.md 2>/dev/null; then
-      exec factory/build.sh
-    fi
-    echo "Planning stopped before the tickets were ready, so nothing was built. See above."
+    case "$command" in
+      fix) exec factory/run.sh --bug "$@" ;;
+      lines) exec factory/status.sh "$@" ;;
+      *) exec "factory/$command.sh" "$@" ;;
+    esac
     ;;
   -h|--help|help|'') usage ;;
   *) usage >&2; exit 1 ;;

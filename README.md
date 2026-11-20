@@ -5,7 +5,7 @@ It installs on top of an existing project. It does not set one up.
 
 ## Status
 
-Working: refining an idea, planning it into tickets with a lint and a review gate on every document, building one ticket at a time, an acceptance audit, and a control centre.
+Working: lines of work for features and bugs, each refined, planned behind a lint and a review gate on every document, built one ticket at a time, audited and documented; a manager that answers questions and names the next step; and a control centre.
 Not built yet: publishing tickets to GitHub issues, browser checks by an agent, and token and cost figures per run.
 
 Known limits: the factory writes its own acceptance criteria from your idea, so no person defines the checks and nothing is held back from the builder; the reviews are the same model judging its own kind of work; and an agent run is restricted but not sandboxed.
@@ -73,12 +73,14 @@ The command needs `git` and `bash`. Nothing is compiled or installed apart from 
 | --- | --- |
 | `factory new <name>` | Creates `./<name>` from [ts-project-template](https://github.com/RihardsJ/ts-project-template), names it, installs the factory, makes the first commit, then runs the project's `setup.sh` |
 | `factory install [dir]` | Installs or updates the factory in an existing project, the current directory by default |
-| `factory run <text>` | In a project: idea, plan and build in one go. Each step stops the run if its gate fails |
-| `factory idea <text>` | In a project: refines a sentence into `specs/idea.md` without asking anything, and lists every decision it made for you. `--interview` asks you instead |
-| `factory plan` | In a project: stories, intel, tickets, ticket review. Stops for you only when the stories have open questions |
-| `factory build [n]` | In a project: the Ralph loop. One ticket per fresh run until none are left, at most `n` (default 25) |
-| `factory status` | In a project: each document and its gate, the ticket board, what is running, the latest run's events. `--watch` follows it |
-| `factory panel [port]` | In a project: the control centre, a web page with Status, Artifacts, Logs and Context tabs, and buttons to run and stop the factory |
+| `factory run <text>` | In a project: opens a feature line and takes it from one sentence to built, audited and documented work. Each step stops the run if its gate fails |
+| `factory fix <text>` | In a project: the same for a correction to something already built, as a bug line |
+| `factory ask <question>` | In a project: the manager answers a question about what was built and why, and names the next step |
+| `factory idea <text>` | In a project: opens a line and refines its idea only, asking nothing and listing every decision it made for you. `--bug` for a correction, `--interview` to be asked |
+| `factory plan` | In a project: stories, intel and tickets for the current line. Stops for you only when the stories have open questions |
+| `factory build [n]` | In a project: the Ralph loop on the current line. One ticket per fresh run until none are left, at most `n` (default 25) |
+| `factory status` | In a project: every line of work and where it stands, then the current line in detail. `--watch` follows it |
+| `factory panel [port]` | In a project: the control centre, a web page to oversee the lines, ask the manager, and run and stop the factory |
 | `factory stop` | In a project: stops the run in progress and the agent or check it started. Nothing else on the machine is touched |
 | `factory update` | Pulls the latest factory into `~/.software-factory` |
 | `factory -v` | Shows the version, as the number in `VERSION` and the commit it was built from |
@@ -90,33 +92,69 @@ Set `FACTORY_TEMPLATE` to a Git URL or path to start from a different template.
 
 After `factory update`, the next `factory` command you run in a project brings that project's copy in step and commits the change. Set `FACTORY_PIN=1` to keep a project on the copy it has.
 
-## How a project gets built
+## Lines of work
+
+A project is built one line at a time. A line is one feature or one correction, and everything the factory produces for it lives in one folder:
+
+```text
+work/
+  memory.md                       Notes builders leave for each other, across every line
+  features/
+    001-greeting-route/           A feature, numbered in the order it was asked for
+      request.md                  What you asked for, word for word
+      idea.md                     What was agreed, with every assumption made for you
+      idea.review.md              The gate on the idea
+      stories.md                  Stories and acceptance lines
+      stories.review.md           The gate on the stories
+      intel.md                    What the scout found in the code
+      tickets/
+        001-greet-by-name.md      One ticket per story
+        review.md                 The gate on the tickets
+      acceptance.md               What the audit observed when it used the result
+      summary.md                  What was built, how to use it, where it lives
+  bugs/
+    002-empty-name-greeting/      A correction, with the same files
+```
+
+Numbers run across features and bugs, so they give the order of the work. Every commit is named for its line, such as `factory(002-empty-name-greeting): tickets`, so `git log` reads as the history of each line.
+
+`plan`, `build` and `idea` act on the current line, which is the newest one not yet accepted. Set `FACTORY_LINE=3` to act on line 003 instead.
+
+### The manager
+
+After something is built you will have questions about it. `factory ask "<question>"` answers from the work folders and the code, cites where each fact comes from, changes nothing, and ends with one next step: nothing to do, a `factory fix "..."` to run when the behaviour is wrong, or a `factory run "..."` when you want something new. Running that command opens a new line, so a correction is planned, built, audited and documented like any other work, and the original line stays as the record of what was first agreed.
+
+A bug line states what was expected, what happens instead, and the smallest correction. Its idea names the earlier line whose promise it corrects, and its builder starts from a test that reproduces the problem.
+
+When a line is accepted, a documenter updates the project's own documentation where the work made it untrue or incomplete, and writes the line's `summary.md`. It may change Markdown files only; anything else is thrown away.
+
+## How a line gets built
 
 People write the idea and approve the stories. Scripts decide which step runs next and whether work is accepted. An agent does one step in a fresh context and stops.
 
 ### In one command
 
-`factory run "a sentence about what you want"` does all of it: refine the idea, plan it into reviewed tickets, then loop over the tickets until none are left. It stops early only when a gate fails or the stories have a question for you. Use the separate commands below when you want to read the idea before anything is planned.
+`factory run "a sentence about what you want"` opens a feature line and does all of it: refine the idea, plan it into reviewed tickets, loop over the tickets until none are left, audit the result and document it. `factory fix "what is wrong"` does the same for a correction. It stops early only when a gate fails or the stories have a question for you. Use the separate commands below when you want to read the idea before anything is planned.
 
 ### Plan
 
-Start with `factory idea "a sentence about what you want"`. It fills the gaps itself, with the simplest conventional choice for each, and writes `specs/idea.md`. Every decision it made that you did not state is listed under Assumptions, so checking the idea is one read. Only what cannot be chosen without facts you hold stays under Undecided.
+Start with `factory idea "a sentence about what you want"`. It fills the gaps itself, with the simplest conventional choice for each, and writes the line's `idea.md`. Every decision it made that you did not state is listed under Assumptions, so checking the idea is one read. Only what cannot be chosen without facts you hold stays under Undecided.
 
 Every agent runs headless, as `claude -p` started by a script with a fixed prompt, limited tools and a spending cap. Nothing opens an interactive session unless you ask for one with `factory idea --interview`.
 
-`factory idea` with no text refines an idea already in `specs/idea.md`, and refuses when there is none. `factory idea --interview` asks you the questions one at a time instead of deciding for you.
+`factory idea` with no text refines the current line's idea again, and refuses when there is no open line. `factory idea --interview` asks you the questions one at a time instead of deciding for you.
 
 Then run `factory plan` from the project root. It stops whenever it needs you, and continues from what is on disk when you run it again.
 
 | Step | Who | Writes | Lint (a script) | Review (a fresh agent run) |
 | --- | --- | --- | --- | --- |
-| Idea | The refiner, or you | `specs/idea.md` | Every section filled, no template placeholders, no words that cannot be checked, at most three Undecided | Faithful to what you asked, nothing invented, every rule checkable, edges covered, no contradictions |
-| Stories | Strategist | `specs/stories.md` | Unique story numbers, every story has `WHEN ... THEN ...` lines | Every capability, rule and "Done means" line of the idea is covered; nothing invented; ranks fit |
+| Idea | The refiner, or you | `idea.md` | Every section filled, no template placeholders, no words that cannot be checked, at most three Undecided | Faithful to what you asked, nothing invented, every rule checkable, edges covered, no contradictions |
+| Stories | Strategist | `stories.md` | Unique story numbers, every story has `WHEN ... THEN ...` lines | Every capability, rule and "Done means" line of the idea is covered; nothing invented; ranks fit |
 | Approval | The script, or you | `Status: approved` | No open questions: approved automatically. Any open question: it stops for you | |
-| Intel | Scout | `specs/intel.md` | It names the project's check command | |
+| Intel | Scout | `intel.md` | It names the project's check command | |
 | Tickets | Strategist | `tickets/NNN-*.md` | Every Must and Should acceptance line appears in exactly one ticket, word for word; dependencies point to earlier tickets that exist | Nothing invented, nothing already built, one ticket per story and none that only adds tests, each ticket stands alone |
 
-Each document passes a gate before the next step reads it. The lint runs first because it costs nothing; the review is a separate agent run that did not write the document. A failed gate sends the findings back to the writer, for up to three rounds. If it still fails, planning stops, and `factory build` refuses tickets that did not pass. Each review is kept beside its document: `specs/idea.review.md`, `specs/stories.review.md`, `tickets/review.md`.
+Each document passes a gate before the next step reads it. The lint runs first because it costs nothing; the review is a separate agent run that did not write the document. A failed gate sends the findings back to the writer, for up to three rounds. If it still fails, planning stops, and `factory build` refuses tickets that did not pass. Each review is kept beside its document: `idea.review.md`, `stories.review.md`, `tickets/review.md`.
 
 The idea is judged again whenever you edit it, so a hand-written or hand-corrected idea goes through the same gate.
 
@@ -126,8 +164,9 @@ The idea is judged again whenever you edit it, so a hand-written or hand-correct
 
 | Tab | Shows |
 | --- | --- |
-| Status | Each document with its gate result, the ticket board, the acceptance audit, the latest run's events, and buttons to run all, refine an idea, plan, build and stop |
-| Artifacts | Every document the factory produced, in the order it produced them, to read in full |
+| Status | Every line of work and where it stands. Pick one to see its documents with their gate results, its ticket board, its audit and whether it is documented. Buttons start a new feature, a fix or an idea, plan or build the chosen line, and stop a run |
+| Manager | A box to ask the manager a question, its answer, and a button to start the fix or feature it recommends |
+| Artifacts | Every document of the chosen line, in the order the factory produced them, to read in full |
 | Logs | Every run, with its events and each agent reply and check output |
 | Context | What every agent run starts with, what each role reads and writes, and the exact prompt, tools and size of any past run step |
 
@@ -145,13 +184,13 @@ Each run keeps every agent reply, check output and an `events.log` under `factor
 
 ### Build
 
-Run `factory build` from the project root, with a clean working tree. This is a Ralph loop: the same builder prompt, run again and again, each time in a fresh context, one ticket per run. What earlier runs did is on disk, in the tickets, `tickets/memory.md` and Git, so no run needs the context of the one before. The project's check command is the backpressure.
+Run `factory build` from the project root, with a clean working tree. This is a Ralph loop: the same builder prompt, run again and again, each time in a fresh context, one ticket per run. What earlier runs did is on disk, in the tickets, `work/memory.md` and Git, so no run needs the context of the one before. The project's check command is the backpressure.
 
 It differs from the plainest Ralph loop in three ways. The script picks the next ticket, so the order never depends on an agent's choice. The script runs the check command and decides whether work is accepted, so an agent cannot declare itself done. And a second fresh run reviews each ticket before it is committed.
 
 1. Preflight: the script runs the project's check command. If it fails before any work, the run stops, because no builder could turn it green.
 2. The script picks the lowest-numbered ticket with `Status: todo`.
-3. A builder implements that ticket with tests. It may not touch `specs/`, `factory/` or any ticket.
+3. A builder implements that ticket with tests. It may not touch `factory/`, or anything under `work/` except `work/memory.md`.
 4. The script, not the builder, decides what happens next:
    - protected files changed: they are restored and the builder tries again;
    - nothing changed: the builder tries again;
@@ -159,8 +198,9 @@ It differs from the plainest Ralph loop in three ways. The script picks the next
    - the check passes: a reviewer in a fresh context, with read-only tools, rules on every "Done when" line against the staged diff.
 5. Approved: the script marks the ticket done, ticks its boxes and commits. Then the next ticket.
 6. Not accepted after three attempts: the work is thrown away, the ticket is marked blocked with the last feedback, and the run stops.
-7. No tickets left: an auditor uses the result as a user would, by starting the application or calling the module, and rules on every "Done means" line of the idea from what it observes. Passing tests do not count. The audit is saved as `specs/acceptance.md`.
+7. No tickets left: an auditor uses the result as a user would, by starting the application or calling the module, and rules on every "Done means" line of the idea from what it observes. Passing tests do not count. The audit is saved as `acceptance.md`.
 8. Any gap the audit finds becomes a new ticket, and the loop builds it and audits again, up to two audits.
+9. Accepted: the documenter updates the project's documentation and writes the line's `summary.md`.
 
 ### What an agent run can reach
 
@@ -172,7 +212,7 @@ This is not a sandbox. A builder can still run any other command as your user, s
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `FACTORY_CHECK` | from `specs/intel.md` | Overrides the check command on a machine that cannot run the full one |
+| `FACTORY_CHECK` | from `intel.md` | Overrides the check command on a machine that cannot run the full one |
 | `FACTORY_APPROVE` | `auto` | `manual` makes `factory plan` always stop for you to approve the stories |
 | `FACTORY_REVIEW_ROUNDS` | 3 | Writer and reviewer rounds for each planning document before the run stops |
 | `FACTORY_MAX_TICKETS` | 25 | The loop's cap: tickets per `factory build`, also its first argument |

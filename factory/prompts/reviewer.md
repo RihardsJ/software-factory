@@ -19,7 +19,7 @@ Confirm that what was built is what the ticket asked for. You did not write this
 - Judge the code on disk, never a summary of it.
 - Rule on every "Done when" line separately: met, or not met. For met, cite the test that proves it as `path:line`, and confirm that test would fail if the behaviour were removed. For not met, say exactly what is missing.
 - Do not use a narrow check to support a broad claim. A test that covers one value does not prove a rule about a range.
-- Blocking, always: a "Done when" line with no test; a test deleted, skipped or weakened; a change to `specs/`, `factory/` or a ticket file; work listed under the ticket's "Out of scope"; a change the ticket did not ask for that alters behaviour.
+- Blocking, always: a "Done when" line with no test; a test deleted, skipped or weakened; a change under `work/` other than `work/memory.md`, or under `factory/`; work listed under the ticket's "Out of scope"; a change the ticket did not ask for that alters behaviour.
 - Not your job: running the test suite (the harness already did, and it passed), style preferences, or improvements nobody asked for.
 - Report problems only. Name each one precisely enough that the builder can fix it without guessing.
 

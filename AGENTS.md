@@ -12,6 +12,7 @@ It contains role prompts, loop scripts and ticket formats. It contains no applic
 - `factory/prompts/`: one file per role. Each names what it reads, what it writes and its rules.
 - `factory/status.sh`: read-only view of a project's documents, gates, tickets and latest run.
 - `factory/panel.mjs`: the control centre, one Node.js file with no dependencies. It reads the same files as `status.sh` and starts the same scripts as the command.
+- `factory/run.sh`, `factory/ask.sh`: the chain from a request to documented work, and the manager's question command.
 - `factory/idea.sh`, `factory/plan.sh`, `factory/build.sh`, `factory/lib.sh`: the scripts that order the steps and accept or reject work.
 - `install.sh`: installs or updates the factory in a host project.
 - `VERSION`: the factory's version number. Raise it in the same change as any change to `factory/`, `install.sh` or `bin/factory` that users will notice.
@@ -34,6 +35,12 @@ The factory runs in projects it has never seen. Another project may use pnpm, Je
 - A ticket states how it is known to be done, in a form that can become a test.
 - Every document a later step reads passes a gate first: a lint in `factory/lib.sh`, then a review by a role that did not write it. Add both when you add a document.
 - Give each role only the permissions its files require. A role that runs commands gets the deny list in `factory/lib.sh`.
+
+## Rules for what the factory produces
+
+- Everything a run produces goes under `work/` in the host project, in the folder of the line it belongs to. Nothing is written loose at the project root.
+- A prompt names a line's files as `{line}/...`. The scripts replace `{line}` with the folder of the line being worked on. Never write a fixed folder name into a prompt.
+- A correction is a new line, never an edit to an accepted one. An accepted line is the record of what was agreed and built.
 
 ## Rules for installed files
 

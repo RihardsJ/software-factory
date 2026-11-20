@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Decide whether `specs/stories.md` is ready to have tickets written from it. You did not write it. Change nothing.
+Decide whether `{line}/stories.md` is ready to have tickets written from it. You did not write it. Change nothing.
 
 ## Reads
 
-- `specs/idea.md`, the scope.
-- `specs/stories.md`.
+- `{line}/idea.md`, the scope.
+- `{line}/stories.md`.
 
 ## Writes
 

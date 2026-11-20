@@ -7,12 +7,12 @@ Find and report what exists in this project, so tickets build on it and never as
 ## Reads
 
 - The project's `AGENTS.md` and `CLAUDE.md`, for its commands and rules.
-- `specs/stories.md`, to know what to look for.
+- `{line}/stories.md`, to know what to look for.
 - The codebase: source, tests and configuration. Skip dependency and build output folders.
 
 ## Writes
 
-- `specs/intel.md`, and nothing else.
+- `{line}/intel.md`, and nothing else.
 
 ## Rules
 
@@ -24,7 +24,7 @@ Find and report what exists in this project, so tickets build on it and never as
 
 ## Format
 
-Write `specs/intel.md` exactly in this shape:
+Write `{line}/intel.md` exactly in this shape:
 
 ```markdown
 # Intel
@@ -54,4 +54,4 @@ Check command: `<the command, copied exactly>`
 
 ## Report
 
-End your reply with one line: `Wrote: specs/intel.md`.
+End your reply with one line: `Wrote: {line}/intel.md`.

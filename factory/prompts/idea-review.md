@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Decide whether `specs/idea.md` is ready to have stories written from it. You did not write it. Change nothing.
+Decide whether `{line}/idea.md` is ready to have stories written from it. You did not write it. Change nothing.
 
 ## Reads
 
-- `specs/idea.md`.
+- `{line}/idea.md`.
 - The starting point under "Inputs for this run", when one is given: what the person originally asked for.
 - The project's `AGENTS.md` or `CLAUDE.md`, briefly.
 

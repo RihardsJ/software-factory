@@ -6,7 +6,7 @@ Decide whether the finished work does what the idea says, by using it as a user 
 
 ## Reads
 
-- `specs/idea.md`: "What a user can do", "Rules" and "Done means" are what must be true.
+- `{line}/idea.md`: "What a user can do", "Rules" and "Done means" are what must be true.
 - The project's `AGENTS.md` or `CLAUDE.md`, for how to run the thing.
 - The code, only to find out how to start it and call it.
 
